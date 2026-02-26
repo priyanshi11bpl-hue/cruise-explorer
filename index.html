@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cruise Price Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ocean: #0a1628;
+    --deep: #0d2240;
+    --gold: #c9a84c;
+    --gold-light: #f0d080;
+    --white: #ffffff;
+    --text-muted: #8aa5c0;
+    --card-bg: #0f2035;
+    --border: rgba(201,168,76,0.2);
+    --success: #2ecc71;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--ocean); color: var(--white); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(26,74,122,0.4) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(10,22,40,0.8) 0%, transparent 50%);
+    pointer-events: none; z-index: 0;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+  header { padding: 48px 0 32px; text-align: center; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
+  .header-badge { display: inline-block; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); border: 1px solid var(--border); padding: 6px 16px; border-radius: 100px; margin-bottom: 20px; }
+  h1 { font-family: 'Playfair Display', serif; font-size: clamp(36px, 6vw, 64px); font-weight: 900; line-height: 1.05; letter-spacing: -1px; margin-bottom: 16px; }
+  h1 span { color: var(--gold); font-style: italic; }
+  .subtitle { color: var(--text-muted); font-size: 16px; font-weight: 300; max-width: 500px; margin: 0 auto; }
+  .section-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 20px; }
+  .cruise-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 48px; }
+  .cruise-toggle-row { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.3s ease; animation: slideIn 0.4s ease both; }
+  .cruise-toggle-row:hover { border-color: var(--gold); background: rgba(201,168,76,0.05); transform: translateX(4px); }
+  .cruise-toggle-row:nth-child(1) { animation-delay: 0.1s; }
+  .cruise-toggle-row:nth-child(2) { animation-delay: 0.2s; }
+  .cruise-toggle-row:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+  .cruise-info { display: flex; align-items: center; gap: 16px; }
+  .cruise-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .norwegian .cruise-icon { background: rgba(0,150,255,0.15); }
+  .royal .cruise-icon { background: rgba(255,100,50,0.15); }
+  .princess .cruise-icon { background: rgba(200,150,255,0.15); }
+  .cruise-name { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .cruise-meta { font-size: 13px; color: var(--text-muted); }
+  .toggle-wrap { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .toggle-label { font-size: 13px; font-weight: 500; color: var(--text-muted); transition: color 0.3s; min-width: 28px; }
+  .toggle-label.active { color: var(--success); }
+  .toggle { width: 52px; height: 28px; background: rgba(255,255,255,0.1); border-radius: 100px; position: relative; transition: background 0.3s ease; flex-shrink: 0; }
+  .toggle.on { background: var(--gold); }
+  .toggle::after { content: ''; position: absolute; width: 22px; height: 22px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+  .toggle.on::after { transform: translateX(24px); }
+  .details-panel { display: none; animation: fadeUp 0.5s ease both; }
+  .details-panel.visible { display: block; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  .details-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+  .details-title { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; }
+  .results-count { font-size: 13px; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 6px 14px; border-radius: 100px; border: 1px solid var(--border); }
+  .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; padding: 20px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; }
+  .stat-item { text-align: center; }
+  .stat-value { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: var(--gold); }
+  .stat-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; }
+  .filter-bar { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+  .filter-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 16px; border-radius: 100px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
+  .filter-btn:hover, .filter-btn.active { background: rgba(201,168,76,0.15); border-color: var(--gold); color: var(--gold); }
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-bottom: 48px; }
+  .cruise-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 24px; transition: all 0.3s ease; animation: fadeUp 0.4s ease both; position: relative; overflow: hidden; }
+  .cruise-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--gold), var(--gold-light)); opacity: 0; transition: opacity 0.3s; }
+  .cruise-card:hover { transform: translateY(-4px); border-color: rgba(201,168,76,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+  .cruise-card:hover::before { opacity: 1; }
+  .card-line-badge { display: inline-block; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; margin-bottom: 14px; font-weight: 500; }
+  .badge-norwegian { background: rgba(0,150,255,0.15); color: #4db8ff; }
+  .badge-royal { background: rgba(255,100,50,0.15); color: #ff8c69; }
+  .badge-princess { background: rgba(200,150,255,0.15); color: #c896ff; }
+  .card-ship { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; margin-bottom: 8px; line-height: 1.3; }
+  .card-route { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+  .card-route span { color: var(--gold); }
+  .card-dates { display: flex; gap: 16px; margin-bottom: 16px; }
+  .date-item { flex: 1; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 10px 12px; }
+  .date-label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+  .date-value { font-size: 13px; font-weight: 500; }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 16px; border-top: 1px solid var(--border); }
+  .duration-badge { font-size: 12px; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 6px; }
+  .price-display { text-align: right; }
+  .price-label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); }
+  .price-amount { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--gold); }
+  .price-currency { font-size: 12px; color: var(--text-muted); margin-left: 4px; }
+  .empty-state { text-align: center; padding: 64px 24px; color: var(--text-muted); grid-column: 1/-1; }
+  .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+  .empty-state h3 { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--white); margin-bottom: 8px; }
+  @media (max-width: 600px) { .stats-bar { grid-template-columns: repeat(2, 1fr); } .cards-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="header-badge">⚓ Live Azure Synapse Data</div>
+    <h1>Cruise Price<br><span>Explorer</span></h1>
+    <p class="subtitle">Real prices from Norwegian, Royal Caribbean & Princess — powered by Azure Synapse Analytics</p>
+  </header>
+
+  <div class="section-label">⚙ Select Cruise Lines to Explore</div>
+  <div class="cruise-list">
+    <div class="cruise-toggle-row norwegian" onclick="toggleLine('norwegian')">
+      <div class="cruise-info">
+        <div class="cruise-icon">🚢</div>
+        <div>
+          <div class="cruise-name">Norwegian Cruise Line</div>
+          <div class="cruise-meta">200 cruises · From 350 EUR · Caribbean, Alaska, Mediterranean, Bahamas</div>
+        </div>
+      </div>
+      <div class="toggle-wrap">
+        <span class="toggle-label" id="label-norwegian">No</span>
+        <div class="toggle" id="toggle-norwegian"></div>
+      </div>
+    </div>
+
+    <div class="cruise-toggle-row royal" onclick="toggleLine('royal')">
+      <div class="cruise-info">
+        <div class="cruise-icon">👑</div>
+        <div>
+          <div class="cruise-name">Royal Caribbean</div>
+          <div class="cruise-meta">60 cruises · From 553 USD · Caribbean, Alaska, Bahamas, Europe</div>
+        </div>
+      </div>
+      <div class="toggle-wrap">
+        <span class="toggle-label" id="label-royal">No</span>
+        <div class="toggle" id="toggle-royal"></div>
+      </div>
+    </div>
+
+    <div class="cruise-toggle-row princess" onclick="toggleLine('princess')">
+      <div class="cruise-info">
+        <div class="cruise-icon">👸</div>
+        <div>
+          <div class="cruise-name">Princess Cruises</div>
+          <div class="cruise-meta">80 cruises · From 499 USD · Caribbean, Alaska, Mediterranean, Mexico</div>
+        </div>
+      </div>
+      <div class="toggle-wrap">
+        <span class="toggle-label" id="label-princess">No</span>
+        <div class="toggle" id="toggle-princess"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="details-panel" id="detailsPanel">
+    <div class="details-header">
+      <div class="details-title">Cruise Results</div>
+      <div class="results-count" id="resultsCount">0 cruises</div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-item"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total Cruises</div></div>
+      <div class="stat-item"><div class="stat-value" id="statMin">—</div><div class="stat-label">Lowest Price</div></div>
+      <div class="stat-item"><div class="stat-value" id="statMax">—</div><div class="stat-label">Highest Price</div></div>
+      <div class="stat-item"><div class="stat-value" id="statAvg">—</div><div class="stat-label">Avg Price</div></div>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterBy('all', this)">All</button>
+      <button class="filter-btn" onclick="filterBy('norwegian', this)">Norwegian</button>
+      <button class="filter-btn" onclick="filterBy('royal', this)">Royal Caribbean</button>
+      <button class="filter-btn" onclick="filterBy('princess', this)">Princess</button>
+      <button class="filter-btn" onclick="sortBy('price', this)">💰 Cheapest First</button>
+      <button class="filter-btn" onclick="sortBy('date', this)">📅 Earliest First</button>
+      <button class="filter-btn" onclick="sortBy('priceDesc', this)">💎 Most Expensive</button>
+    </div>
+
+    <div class="cards-grid" id="cardsGrid"></div>
+  </div>
+</div>
+
+<script>
+const CRUISE_DATA = {
+  norwegian: [
+    { ship: "Norwegian Getaway", departure: "2026-03-23", arrival: "2026-03-30", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 350, currency: "EUR" },
+    { ship: "Norwegian Escape", departure: "2026-04-26", arrival: "2026-05-03", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 515, currency: "EUR" },
+    { ship: "Norwegian Escape", departure: "2026-04-19", arrival: "2026-04-26", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 535, currency: "EUR" },
+    { ship: "Norwegian Escape", departure: "2026-04-12", arrival: "2026-04-19", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 550, currency: "EUR" },
+    { ship: "Norwegian Escape", departure: "2026-03-22", arrival: "2026-03-29", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 560, currency: "EUR" },
+    { ship: "Norwegian Escape", departure: "2026-04-05", arrival: "2026-04-12", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 580, currency: "EUR" },
+    { ship: "Norwegian Escape", departure: "2026-05-10", arrival: "2026-05-17", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 580, currency: "EUR" },
+    { ship: "Norwegian Escape", departure: "2026-03-29", arrival: "2026-04-05", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 640, currency: "EUR" },
+    { ship: "Norwegian Escape", departure: "2026-03-15", arrival: "2026-03-22", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 850, currency: "EUR" },
+    { ship: "Norwegian Aqua", departure: "2027-10-31", arrival: "2027-11-07", departurePort: "PCV", arrivalPort: "PCV", duration: 7, price: 1120, currency: "EUR" },
+    { ship: "Norwegian Aqua", departure: "2027-04-25", arrival: "2027-05-02", departurePort: "PCV", arrivalPort: "PCV", duration: 7, price: 1146, currency: "EUR" },
+    { ship: "Norwegian Aqua", departure: "2027-11-14", arrival: "2027-11-21", departurePort: "PCV", arrivalPort: "PCV", duration: 7, price: 1165, currency: "EUR" },
+    { ship: "Norwegian Aura", departure: "2027-06-19", arrival: "2027-06-26", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 1547, currency: "EUR" },
+    { ship: "Norwegian Aura", departure: "2027-06-26", arrival: "2027-07-03", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 1547, currency: "EUR" },
+    { ship: "Norwegian Aqua", departure: "2027-12-26", arrival: "2028-01-02", departurePort: "PCV", arrivalPort: "PCV", duration: 7, price: 1845, currency: "EUR" },
+    { ship: "Norwegian Escape", departure: "2026-03-08", arrival: "2026-03-15", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 3005, currency: "EUR" },
+  ],
+  royal: [
+    { ship: "Wonder of the Seas", departure: "2026-04-27", arrival: "2026-05-04", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 553.16, currency: "USD" },
+    { ship: "Wonder of the Seas", departure: "2026-05-11", arrival: "2026-05-18", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 620, currency: "USD" },
+    { ship: "Navigator of the Seas", departure: "2027-01-11", arrival: "2027-01-18", departurePort: "LAX", arrivalPort: "LAX", duration: 7, price: 601, currency: "USD" },
+    { ship: "Explorer of the Seas", departure: "2027-03-08", arrival: "2027-03-15", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 655, currency: "USD" },
+    { ship: "Oasis of the Seas", departure: "2026-08-03", arrival: "2026-08-10", departurePort: "FLL", arrivalPort: "FLL", duration: 7, price: 699, currency: "USD" },
+    { ship: "Navigator", departure: "2027-02-08", arrival: "2027-02-15", departurePort: "LAX", arrivalPort: "LAX", duration: 7, price: 620, currency: "USD" },
+    { ship: "Symphony of the Seas", departure: "2026-06-08", arrival: "2026-06-15", departurePort: "BCN", arrivalPort: "BCN", duration: 7, price: 749, currency: "USD" },
+    { ship: "Harmony of the Seas", departure: "2026-07-06", arrival: "2026-07-13", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 820, currency: "USD" },
+    { ship: "Harmony of the Seas", departure: "2026-09-07", arrival: "2026-09-14", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 1407, currency: "USD" },
+    { ship: "Icon of the Seas", departure: "2026-10-05", arrival: "2026-10-12", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 1524, currency: "USD" },
+    { ship: "Anthem of the Seas", departure: "2026-11-09", arrival: "2026-11-16", departurePort: "NJE", arrivalPort: "NJE", duration: 7, price: 1448, currency: "USD" },
+    { ship: "Icon of the Seas", departure: "2026-08-17", arrival: "2026-08-24", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 1459, currency: "USD" },
+  ],
+  princess: [
+    { ship: "Sun Princess", departure: "2026-03-01", arrival: "2026-03-08", departurePort: "FLL", arrivalPort: "FLL", duration: 7, price: 499, currency: "USD" },
+    { ship: "Ruby Princess", departure: "2026-10-05", arrival: "2026-10-12", departurePort: "FLL", arrivalPort: "FLL", duration: 7, price: 554, currency: "USD" },
+    { ship: "Diamond Princess", departure: "2026-09-07", arrival: "2026-09-14", departurePort: "YVR", arrivalPort: "YVR", duration: 7, price: 643, currency: "USD" },
+    { ship: "Emerald Princess", departure: "2027-02-08", arrival: "2027-02-15", departurePort: "FLL", arrivalPort: "FLL", duration: 7, price: 764, currency: "USD" },
+    { ship: "Crown Princess", departure: "2026-05-18", arrival: "2026-05-25", departurePort: "SEA", arrivalPort: "SEA", duration: 7, price: 807, currency: "USD" },
+    { ship: "Sun Princess", departure: "2026-11-09", arrival: "2026-11-16", departurePort: "FLL", arrivalPort: "FLL", duration: 7, price: 921, currency: "USD" },
+    { ship: "Sky Princess", departure: "2026-04-06", arrival: "2026-04-13", departurePort: "FLL", arrivalPort: "FLL", duration: 7, price: 1189, currency: "USD" },
+    { ship: "Majestic Princess", departure: "2026-08-10", arrival: "2026-08-17", departurePort: "SEA", arrivalPort: "SEA", duration: 7, price: 1239, currency: "USD" },
+    { ship: "Grand Princess", departure: "2027-10-13", arrival: "2027-10-20", departurePort: "SEA", arrivalPort: "SEA", duration: 7, price: 1549, currency: "USD" },
+    { ship: "Enchanted Princess", departure: "2027-03-15", arrival: "2027-03-22", departurePort: "BCN", arrivalPort: "BCN", duration: 7, price: 1099, currency: "USD" },
+  ]
+};
+
+let activeLines = new Set();
+let currentFilter = 'all';
+let currentSort = 'date';
+
+function toggleLine(line) {
+  const toggle = document.getElementById(`toggle-${line}`);
+  const label = document.getElementById(`label-${line}`);
+  if (activeLines.has(line)) {
+    activeLines.delete(line);
+    toggle.classList.remove('on');
+    label.textContent = 'No';
+    label.classList.remove('active');
+  } else {
+    activeLines.add(line);
+    toggle.classList.add('on');
+    label.textContent = 'Yes';
+    label.classList.add('active');
+  }
+  renderDetails();
+}
+
+function filterBy(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-bar .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCards();
+}
+
+function sortBy(type, btn) {
+  currentSort = type;
+  btn.classList.add('active');
+  renderCards();
+}
+
+function getActiveData() {
+  let data = [];
+  activeLines.forEach(line => {
+    (CRUISE_DATA[line] || []).forEach(cruise => data.push({ ...cruise, line }));
+  });
+  return data;
+}
+
+function renderDetails() {
+  const panel = document.getElementById('detailsPanel');
+  if (activeLines.size === 0) { panel.classList.remove('visible'); return; }
+  panel.classList.add('visible');
+  renderStats();
+  renderCards();
+}
+
+function renderStats() {
+  const data = getActiveData();
+  const prices = data.map(d => d.price).filter(p => p > 0);
+  document.getElementById('statTotal').textContent = data.length;
+  document.getElementById('statMin').textContent = prices.length ? Math.min(...prices).toLocaleString() : '—';
+  document.getElementById('statMax').textContent = prices.length ? Math.max(...prices).toLocaleString() : '—';
+  document.getElementById('statAvg').textContent = prices.length ? Math.round(prices.reduce((a,b)=>a+b,0)/prices.length).toLocaleString() : '—';
+  document.getElementById('resultsCount').textContent = `${data.length} cruise${data.length!==1?'s':''}`;
+}
+
+function renderCards() {
+  let data = getActiveData();
+  if (currentFilter !== 'all') data = data.filter(d => d.line === currentFilter);
+  if (currentSort === 'price') data.sort((a,b) => a.price - b.price);
+  else if (currentSort === 'date') data.sort((a,b) => new Date(a.departure) - new Date(b.departure));
+  else if (currentSort === 'priceDesc') data.sort((a,b) => b.price - a.price);
+
+  const grid = document.getElementById('cardsGrid');
+  if (data.length === 0) {
+    grid.innerHTML = `<div class="empty-state"><div class="icon">🌊</div><h3>No Results</h3><p>Try selecting a different cruise line or filter</p></div>`;
+    return;
+  }
+  const lineLabels = { norwegian: 'Norwegian', royal: 'Royal Caribbean', princess: 'Princess' };
+  const badgeClasses = { norwegian: 'badge-norwegian', royal: 'badge-royal', princess: 'badge-princess' };
+
+  grid.innerHTML = data.map((cruise, i) => `
+    <div class="cruise-card" style="animation-delay:${i*0.04}s">
+      <div class="card-line-badge ${badgeClasses[cruise.line]}">${lineLabels[cruise.line]}</div>
+      <div class="card-ship">${cruise.ship}</div>
+      <div class="card-route">${cruise.departurePort} <span>→</span> ${cruise.arrivalPort}</div>
+      <div class="card-dates">
+        <div class="date-item"><div class="date-label">Departure</div><div class="date-value">${formatDate(cruise.departure)}</div></div>
+        <div class="date-item"><div class="date-label">Arrival</div><div class="date-value">${formatDate(cruise.arrival)}</div></div>
+      </div>
+      <div class="card-footer">
+        <div class="duration-badge">⏱ ${cruise.duration} nights</div>
+        <div class="price-display">
+          <div class="price-label">From</div>
+          <div class="price-amount">${cruise.price.toLocaleString()}<span class="price-currency">${cruise.currency}</span></div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function formatDate(d) {
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+</script>
+</body>
+</html>
