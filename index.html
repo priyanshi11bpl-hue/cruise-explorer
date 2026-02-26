@@ -7,15 +7,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ocean: #0a1628;
-    --deep: #0d2240;
-    --gold: #c9a84c;
-    --gold-light: #f0d080;
-    --white: #ffffff;
-    --text-muted: #8aa5c0;
-    --card-bg: #0f2035;
-    --border: rgba(201,168,76,0.2);
-    --success: #2ecc71;
+    --ocean: #0a1628; --gold: #c9a84c; --gold-light: #f0d080;
+    --white: #ffffff; --text-muted: #8aa5c0; --card-bg: #0f2035;
+    --border: rgba(201,168,76,0.2); --success: #2ecc71;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: var(--ocean); color: var(--white); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
@@ -74,7 +68,8 @@
   .badge-norwegian { background: rgba(0,150,255,0.15); color: #4db8ff; }
   .badge-royal { background: rgba(255,100,50,0.15); color: #ff8c69; }
   .badge-princess { background: rgba(200,150,255,0.15); color: #c896ff; }
-  .card-ship { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; margin-bottom: 8px; line-height: 1.3; }
+  .card-ship { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
+  .card-title { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
   .card-route { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
   .card-route span { color: var(--gold); }
   .card-dates { display: flex; gap: 16px; margin-bottom: 16px; }
@@ -116,13 +111,12 @@
         <div class="toggle" id="toggle-norwegian"></div>
       </div>
     </div>
-
     <div class="cruise-toggle-row royal" onclick="toggleLine('royal')">
       <div class="cruise-info">
         <div class="cruise-icon">👑</div>
         <div>
           <div class="cruise-name">Royal Caribbean</div>
-          <div class="cruise-meta">60 cruises · From 553 USD · Caribbean, Alaska, Bahamas, Europe</div>
+          <div class="cruise-meta">60 cruises · From 553 USD · Bahamas, Caribbean, Perfect Day</div>
         </div>
       </div>
       <div class="toggle-wrap">
@@ -130,13 +124,12 @@
         <div class="toggle" id="toggle-royal"></div>
       </div>
     </div>
-
     <div class="cruise-toggle-row princess" onclick="toggleLine('princess')">
       <div class="cruise-info">
         <div class="cruise-icon">👸</div>
         <div>
           <div class="cruise-name">Princess Cruises</div>
-          <div class="cruise-meta">80 cruises · From 499 USD · Caribbean, Alaska, Mediterranean, Mexico</div>
+          <div class="cruise-meta">80 cruises · From 499 USD · Caribbean, Japan, Mediterranean, Australia</div>
         </div>
       </div>
       <div class="toggle-wrap">
@@ -151,14 +144,12 @@
       <div class="details-title">Cruise Results</div>
       <div class="results-count" id="resultsCount">0 cruises</div>
     </div>
-
     <div class="stats-bar">
       <div class="stat-item"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total Cruises</div></div>
       <div class="stat-item"><div class="stat-value" id="statMin">—</div><div class="stat-label">Lowest Price</div></div>
       <div class="stat-item"><div class="stat-value" id="statMax">—</div><div class="stat-label">Highest Price</div></div>
       <div class="stat-item"><div class="stat-value" id="statAvg">—</div><div class="stat-label">Avg Price</div></div>
     </div>
-
     <div class="filter-bar">
       <button class="filter-btn active" onclick="filterBy('all', this)">All</button>
       <button class="filter-btn" onclick="filterBy('norwegian', this)">Norwegian</button>
@@ -168,7 +159,6 @@
       <button class="filter-btn" onclick="sortBy('date', this)">📅 Earliest First</button>
       <button class="filter-btn" onclick="sortBy('priceDesc', this)">💎 Most Expensive</button>
     </div>
-
     <div class="cards-grid" id="cardsGrid"></div>
   </div>
 </div>
@@ -176,48 +166,48 @@
 <script>
 const CRUISE_DATA = {
   norwegian: [
-    { ship: "Norwegian Getaway", departure: "2026-03-23", arrival: "2026-03-30", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 350, currency: "EUR" },
-    { ship: "Norwegian Escape", departure: "2026-04-26", arrival: "2026-05-03", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 515, currency: "EUR" },
-    { ship: "Norwegian Escape", departure: "2026-04-19", arrival: "2026-04-26", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 535, currency: "EUR" },
-    { ship: "Norwegian Escape", departure: "2026-04-12", arrival: "2026-04-19", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 550, currency: "EUR" },
-    { ship: "Norwegian Escape", departure: "2026-03-22", arrival: "2026-03-29", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 560, currency: "EUR" },
-    { ship: "Norwegian Escape", departure: "2026-04-05", arrival: "2026-04-12", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 580, currency: "EUR" },
-    { ship: "Norwegian Escape", departure: "2026-05-10", arrival: "2026-05-17", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 580, currency: "EUR" },
-    { ship: "Norwegian Escape", departure: "2026-03-29", arrival: "2026-04-05", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 640, currency: "EUR" },
-    { ship: "Norwegian Escape", departure: "2026-03-15", arrival: "2026-03-22", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 850, currency: "EUR" },
-    { ship: "Norwegian Aqua", departure: "2027-10-31", arrival: "2027-11-07", departurePort: "PCV", arrivalPort: "PCV", duration: 7, price: 1120, currency: "EUR" },
-    { ship: "Norwegian Aqua", departure: "2027-04-25", arrival: "2027-05-02", departurePort: "PCV", arrivalPort: "PCV", duration: 7, price: 1146, currency: "EUR" },
-    { ship: "Norwegian Aqua", departure: "2027-11-14", arrival: "2027-11-21", departurePort: "PCV", arrivalPort: "PCV", duration: 7, price: 1165, currency: "EUR" },
-    { ship: "Norwegian Aura", departure: "2027-06-19", arrival: "2027-06-26", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 1547, currency: "EUR" },
-    { ship: "Norwegian Aura", departure: "2027-06-26", arrival: "2027-07-03", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 1547, currency: "EUR" },
-    { ship: "Norwegian Aqua", departure: "2027-12-26", arrival: "2028-01-02", departurePort: "PCV", arrivalPort: "PCV", duration: 7, price: 1845, currency: "EUR" },
-    { ship: "Norwegian Escape", departure: "2026-03-08", arrival: "2026-03-15", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 3005, currency: "EUR" },
+    { ship: "Norwegian Getaway", title: "Norwegian Getaway 7 nights", departure: "2026-03-23", arrival: "2026-03-30", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 350, currency: "EUR" },
+    { ship: "Norwegian Escape", title: "Norwegian Escape 7 nights", departure: "2026-04-26", arrival: "2026-05-03", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 515, currency: "EUR" },
+    { ship: "Norwegian Escape", title: "Norwegian Escape 7 nights", departure: "2026-04-19", arrival: "2026-04-26", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 535, currency: "EUR" },
+    { ship: "Norwegian Escape", title: "Norwegian Escape 7 nights", departure: "2026-04-12", arrival: "2026-04-19", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 550, currency: "EUR" },
+    { ship: "Norwegian Escape", title: "Norwegian Escape 7 nights", departure: "2026-03-22", arrival: "2026-03-29", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 560, currency: "EUR" },
+    { ship: "Norwegian Escape", title: "Norwegian Escape 7 nights", departure: "2026-04-05", arrival: "2026-04-12", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 580, currency: "EUR" },
+    { ship: "Norwegian Escape", title: "Norwegian Escape 7 nights", departure: "2026-03-29", arrival: "2026-04-05", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 640, currency: "EUR" },
+    { ship: "Norwegian Escape", title: "Norwegian Escape 7 nights", departure: "2026-03-15", arrival: "2026-03-22", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 850, currency: "EUR" },
+    { ship: "Norwegian Aqua", title: "Norwegian Aqua 7 nights", departure: "2027-10-31", arrival: "2027-11-07", departurePort: "PCV", arrivalPort: "PCV", duration: 7, price: 1120, currency: "EUR" },
+    { ship: "Norwegian Aqua", title: "Norwegian Aqua 7 nights", departure: "2027-04-25", arrival: "2027-05-02", departurePort: "PCV", arrivalPort: "PCV", duration: 7, price: 1146, currency: "EUR" },
+    { ship: "Norwegian Aqua", title: "Norwegian Aqua 7 nights", departure: "2027-11-14", arrival: "2027-11-21", departurePort: "PCV", arrivalPort: "PCV", duration: 7, price: 1165, currency: "EUR" },
+    { ship: "Norwegian Aura", title: "Norwegian Aura 7 nights", departure: "2027-06-19", arrival: "2027-06-26", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 1547, currency: "EUR" },
+    { ship: "Norwegian Aura", title: "Norwegian Aura 7 nights", departure: "2027-06-26", arrival: "2027-07-03", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 1547, currency: "EUR" },
+    { ship: "Norwegian Aqua", title: "Norwegian Aqua 7 nights", departure: "2027-12-26", arrival: "2028-01-02", departurePort: "PCV", arrivalPort: "PCV", duration: 7, price: 1845, currency: "EUR" },
+    { ship: "Norwegian Escape", title: "Norwegian Escape 7 nights", departure: "2026-03-08", arrival: "2026-03-15", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 3005, currency: "EUR" },
   ],
   royal: [
-    { ship: "Wonder of the Seas", departure: "2026-04-27", arrival: "2026-05-04", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 553.16, currency: "USD" },
-    { ship: "Wonder of the Seas", departure: "2026-05-11", arrival: "2026-05-18", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 620, currency: "USD" },
-    { ship: "Navigator of the Seas", departure: "2027-01-11", arrival: "2027-01-18", departurePort: "LAX", arrivalPort: "LAX", duration: 7, price: 601, currency: "USD" },
-    { ship: "Explorer of the Seas", departure: "2027-03-08", arrival: "2027-03-15", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 655, currency: "USD" },
-    { ship: "Oasis of the Seas", departure: "2026-08-03", arrival: "2026-08-10", departurePort: "FLL", arrivalPort: "FLL", duration: 7, price: 699, currency: "USD" },
-    { ship: "Navigator", departure: "2027-02-08", arrival: "2027-02-15", departurePort: "LAX", arrivalPort: "LAX", duration: 7, price: 620, currency: "USD" },
-    { ship: "Symphony of the Seas", departure: "2026-06-08", arrival: "2026-06-15", departurePort: "BCN", arrivalPort: "BCN", duration: 7, price: 749, currency: "USD" },
-    { ship: "Harmony of the Seas", departure: "2026-07-06", arrival: "2026-07-13", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 820, currency: "USD" },
-    { ship: "Harmony of the Seas", departure: "2026-09-07", arrival: "2026-09-14", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 1407, currency: "USD" },
-    { ship: "Icon of the Seas", departure: "2026-10-05", arrival: "2026-10-12", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 1524, currency: "USD" },
-    { ship: "Anthem of the Seas", departure: "2026-11-09", arrival: "2026-11-16", departurePort: "NJE", arrivalPort: "NJE", duration: 7, price: 1448, currency: "USD" },
-    { ship: "Icon of the Seas", departure: "2026-08-17", arrival: "2026-08-24", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 1459, currency: "USD" },
+    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-04-27", arrival: "2026-05-01", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 553.16, currency: "USD" },
+    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-04-27", arrival: "2026-05-01", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 685.66, currency: "USD" },
+    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-04-13", arrival: "2026-04-17", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 615.81, currency: "USD" },
+    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-04-13", arrival: "2026-04-17", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 715.31, currency: "USD" },
+    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-03-30", arrival: "2026-04-03", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 783.31, currency: "USD" },
+    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-03-23", arrival: "2026-03-27", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 847.81, currency: "USD" },
+    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-04-06", arrival: "2026-04-10", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 944.81, currency: "USD" },
+    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-03-16", arrival: "2026-03-20", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 1015.31, currency: "USD" },
+    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-03-16", arrival: "2026-03-20", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 1288.31, currency: "USD" },
+    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-03-02", arrival: "2026-03-06", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 1492.81, currency: "USD" },
+    { ship: "Icon of the Seas", title: "Eastern Caribbean & Perfect Day", departure: "2026-04-25", arrival: "2026-05-02", departurePort: "Miami", arrivalPort: "Miami", duration: 7, price: 1643.96, currency: "USD" },
+    { ship: "Icon of the Seas", title: "Eastern Caribbean & Perfect Day", departure: "2026-04-11", arrival: "2026-04-18", departurePort: "Miami", arrivalPort: "Miami", duration: 7, price: 1645.96, currency: "USD" },
+    { ship: "Icon of the Seas", title: "Eastern Caribbean & Perfect Day", departure: "2026-03-28", arrival: "2026-04-04", departurePort: "Miami", arrivalPort: "Miami", duration: 7, price: 2496.46, currency: "USD" },
   ],
   princess: [
-    { ship: "Sun Princess", departure: "2026-03-01", arrival: "2026-03-08", departurePort: "FLL", arrivalPort: "FLL", duration: 7, price: 499, currency: "USD" },
-    { ship: "Ruby Princess", departure: "2026-10-05", arrival: "2026-10-12", departurePort: "FLL", arrivalPort: "FLL", duration: 7, price: 554, currency: "USD" },
-    { ship: "Diamond Princess", departure: "2026-09-07", arrival: "2026-09-14", departurePort: "YVR", arrivalPort: "YVR", duration: 7, price: 643, currency: "USD" },
-    { ship: "Emerald Princess", departure: "2027-02-08", arrival: "2027-02-15", departurePort: "FLL", arrivalPort: "FLL", duration: 7, price: 764, currency: "USD" },
-    { ship: "Crown Princess", departure: "2026-05-18", arrival: "2026-05-25", departurePort: "SEA", arrivalPort: "SEA", duration: 7, price: 807, currency: "USD" },
-    { ship: "Sun Princess", departure: "2026-11-09", arrival: "2026-11-16", departurePort: "FLL", arrivalPort: "FLL", duration: 7, price: 921, currency: "USD" },
-    { ship: "Sky Princess", departure: "2026-04-06", arrival: "2026-04-13", departurePort: "FLL", arrivalPort: "FLL", duration: 7, price: 1189, currency: "USD" },
-    { ship: "Majestic Princess", departure: "2026-08-10", arrival: "2026-08-17", departurePort: "SEA", arrivalPort: "SEA", duration: 7, price: 1239, currency: "USD" },
-    { ship: "Grand Princess", departure: "2027-10-13", arrival: "2027-10-20", departurePort: "SEA", arrivalPort: "SEA", duration: 7, price: 1549, currency: "USD" },
-    { ship: "Enchanted Princess", departure: "2027-03-15", arrival: "2027-03-22", departurePort: "BCN", arrivalPort: "BCN", duration: 7, price: 1099, currency: "USD" },
+    { ship: "Sun Princess", title: "Caribbean Getaway With Cozumel", departure: "2026-03-01", arrival: "2026-03-05", departurePort: "Fort Lauderdale", arrivalPort: "Fort Lauderdale", duration: 4, price: 499, currency: "USD" },
+    { ship: "Ruby Princess", title: "Mexican Riviera", departure: "2026-03-07", arrival: "2026-03-18", departurePort: "San Francisco", arrivalPort: "San Francisco", duration: 11, price: 879, currency: "USD" },
+    { ship: "Enchanted Princess", title: "Eastern Caribbean with Tortola", departure: "2026-03-07", arrival: "2026-03-17", departurePort: "Fort Lauderdale", arrivalPort: "Fort Lauderdale", duration: 10, price: 1299, currency: "USD" },
+    { ship: "Diamond Princess", title: "Japan Explorer Spring Flowers", departure: "2026-03-17", arrival: "2026-03-28", departurePort: "YOK", arrivalPort: "YOK", duration: 11, price: 1759, currency: "USD" },
+    { ship: "Enchanted Princess", title: "Southern Caribbean with Martinique", departure: "2026-03-17", arrival: "2026-03-27", departurePort: "Fort Lauderdale", arrivalPort: "Fort Lauderdale", duration: 10, price: 1209, currency: "USD" },
+    { ship: "Diamond Princess", title: "Japan Explorer", departure: "2026-03-06", arrival: "2026-03-17", departurePort: "YOK", arrivalPort: "YOK", duration: 11, price: 2209, currency: "USD" },
+    { ship: "Sapphire Princess", title: "Mediterranean with Greece & Italy", departure: "2026-03-15", arrival: "2026-03-22", departurePort: "ROM", arrivalPort: "ROM", duration: 7, price: 2107, currency: "USD" },
+    { ship: "Sky Princess", title: "Southern Australia Explorer", departure: "2026-02-28", arrival: "2026-03-12", departurePort: "SYD", arrivalPort: "SYD", duration: 12, price: 4584, currency: "USD" },
+    { ship: "Diamond Princess", title: "Japan Explorer Spring Flowers", departure: "2026-03-17", arrival: "2026-03-28", departurePort: "YOK", arrivalPort: "YOK", duration: 11, price: 2559, currency: "USD" },
+    { ship: "Enchanted Princess", title: "Mediterranean Splendor", departure: "2026-05-10", arrival: "2026-05-20", departurePort: "BCN", arrivalPort: "BCN", duration: 10, price: 1899, currency: "USD" },
   ]
 };
 
@@ -251,7 +241,6 @@ function filterBy(filter, btn) {
 
 function sortBy(type, btn) {
   currentSort = type;
-  btn.classList.add('active');
   renderCards();
 }
 
@@ -293,6 +282,7 @@ function renderCards() {
     grid.innerHTML = `<div class="empty-state"><div class="icon">🌊</div><h3>No Results</h3><p>Try selecting a different cruise line or filter</p></div>`;
     return;
   }
+
   const lineLabels = { norwegian: 'Norwegian', royal: 'Royal Caribbean', princess: 'Princess' };
   const badgeClasses = { norwegian: 'badge-norwegian', royal: 'badge-royal', princess: 'badge-princess' };
 
@@ -300,6 +290,7 @@ function renderCards() {
     <div class="cruise-card" style="animation-delay:${i*0.04}s">
       <div class="card-line-badge ${badgeClasses[cruise.line]}">${lineLabels[cruise.line]}</div>
       <div class="card-ship">${cruise.ship}</div>
+      <div class="card-title">${cruise.title}</div>
       <div class="card-route">${cruise.departurePort} <span>→</span> ${cruise.arrivalPort}</div>
       <div class="card-dates">
         <div class="date-item"><div class="date-label">Departure</div><div class="date-value">${formatDate(cruise.departure)}</div></div>
