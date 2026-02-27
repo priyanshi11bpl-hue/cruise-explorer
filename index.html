@@ -4,647 +4,781 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cruise Price Explorer</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ocean:      #0a1628;
-    --deep:       #0d2240;
-    --gold:       #c9a84c;
-    --gold-light: #f0d080;
-    --white:      #ffffff;
-    --text-muted: #8aa5c0;
-    --card-bg:    #0f2035;
-    --border:     rgba(201,168,76,0.2);
-    --success:    #2ecc71;
-    --live-red:   #ff4444;
+    --navy: #0a1628;
+    --deep: #0d1f3c;
+    --ocean: #1a3a5c;
+    --teal: #0e7a8a;
+    --gold: #c9a84c;
+    --foam: #e8f4f8;
+    --white: #ffffff;
+    --muted: #94aab8;
+    --card: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --eur: #4a9eff;
+    --usd: #4ac994;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--ocean); color: var(--white); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
-  body::before {
-    content: ''; position: fixed; inset: 0;
-    background: radial-gradient(ellipse at 20% 50%, rgba(26,74,122,0.4) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 20%, rgba(10,22,40,0.8) 0%, transparent 50%);
-    pointer-events: none; z-index: 0;
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
   }
-  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
 
-  /* ── HEADER ── */
-  header { padding: 48px 0 32px; text-align: center; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
-  .header-badge { display: inline-block; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); border: 1px solid var(--border); padding: 6px 16px; border-radius: 100px; margin-bottom: 20px; }
-  h1 { font-family: 'Playfair Display', serif; font-size: clamp(36px, 6vw, 64px); font-weight: 900; line-height: 1.05; letter-spacing: -1px; margin-bottom: 16px; }
-  h1 span { color: var(--gold); font-style: italic; }
-  .subtitle { color: var(--text-muted); font-size: 16px; font-weight: 300; max-width: 500px; margin: 0 auto 24px; }
-
-  /* ── LIVE STATUS BAR ── */
-  .live-bar { display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 8px; }
-  .live-indicator { display: flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); }
-  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--live-red); animation: pulse-dot 2s infinite; }
-  .live-dot.loading { background: var(--gold); }
-  .live-dot.ready   { background: var(--success); }
-  @keyframes pulse-dot {
-    0%   { box-shadow: 0 0 0 0 rgba(255,68,68,0.5); }
-    70%  { box-shadow: 0 0 0 8px rgba(255,68,68,0); }
-    100% { box-shadow: 0 0 0 0 rgba(255,68,68,0); }
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, var(--deep) 0%, var(--ocean) 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 24px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
   }
-  .last-updated { font-size: 12px; color: var(--text-muted); }
-  .last-updated span { color: var(--gold); }
-
-  /* ── REFRESH BUTTON ── */
+  .logo h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .logo h1 span { color: var(--gold); }
+  .logo p { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .header-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .live-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(14,122,138,0.2); border: 1px solid rgba(14,122,138,0.4);
+    border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 500;
+  }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
   .refresh-btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.05));
-    border: 1px solid var(--gold); color: var(--gold);
-    padding: 9px 20px; border-radius: 100px;
-    font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif;
-    cursor: pointer; transition: all 0.3s ease; letter-spacing: 0.5px;
+    background: var(--teal); border: none; color: white;
+    padding: 10px 20px; border-radius: 8px; font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px;
+    transition: all 0.2s;
   }
-  .refresh-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, rgba(201,168,76,0.25), rgba(201,168,76,0.1));
-    box-shadow: 0 0 20px rgba(201,168,76,0.2); transform: translateY(-1px);
-  }
+  .refresh-btn:hover { background: #0d8fa0; transform: translateY(-1px); }
   .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-  .refresh-icon { font-size: 16px; display: inline-block; }
-  .refresh-btn.spinning .refresh-icon { animation: spin 0.7s linear infinite; }
-  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .spin { animation: spin 1s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── SCRAPER STATUS BANNER ── */
-  .scraper-banner {
-    display: none; margin-bottom: 24px;
-    background: var(--card-bg); border: 1px solid var(--border);
-    border-radius: 12px; padding: 16px 20px;
+  /* SCRAPED TIME */
+  #scraped-bar {
+    background: rgba(201,168,76,0.08);
+    border-bottom: 1px solid rgba(201,168,76,0.15);
+    padding: 8px 40px;
+    display: flex; gap: 24px; flex-wrap: wrap;
+    font-size: 12px; color: var(--muted);
   }
-  .scraper-banner.visible { display: block; }
-  .scraper-banner-title { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
-  .scraper-lines { display: flex; gap: 12px; flex-wrap: wrap; }
-  .scraper-line-item { display: flex; align-items: center; gap: 8px; font-size: 13px; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 8px 14px; }
-  .scraper-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-  .scraper-dot.running  { background: var(--gold); animation: pulse-dot 1.2s infinite; }
-  .scraper-dot.done     { background: var(--success); }
-  .scraper-dot.failed   { background: var(--live-red); }
-  .scraper-dot.waiting  { background: var(--text-muted); }
+  #scraped-bar span { display: flex; align-items: center; gap: 6px; }
+  #scraped-bar strong { color: var(--gold); font-weight: 500; }
 
-  /* ── LOADING OVERLAY ── */
-  .loading-overlay {
-    display: none; position: fixed; inset: 0; z-index: 100;
-    background: rgba(10,22,40,0.85); backdrop-filter: blur(4px);
-    align-items: center; justify-content: center; flex-direction: column; gap: 20px;
+  /* STATUS BANNER */
+  #status-banner {
+    display: none;
+    margin: 16px 40px 0;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    border: 1px solid;
   }
-  .loading-overlay.active { display: flex; }
-  .loading-spinner { width: 52px; height: 52px; border-radius: 50%; border: 3px solid rgba(201,168,76,0.2); border-top-color: var(--gold); animation: spin 0.8s linear infinite; }
-  .loading-text { color: var(--gold); font-size: 14px; letter-spacing: 2px; text-transform: uppercase; }
-  .loading-sub  { color: var(--text-muted); font-size: 12px; }
+  #status-banner.running { background: rgba(74,158,255,0.08); border-color: rgba(74,158,255,0.3); color: #7bc4ff; }
+  #status-banner.done    { background: rgba(74,201,148,0.08); border-color: rgba(74,201,148,0.3); color: #7de8b8; }
+  #status-banner.partial { background: rgba(201,168,76,0.08); border-color: rgba(201,168,76,0.3); color: var(--gold); }
+  #status-banner.failed  { background: rgba(255,100,100,0.08); border-color: rgba(255,100,100,0.3); color: #ff9090; }
 
-  /* ── TOAST ── */
-  .toast {
-    position: fixed; bottom: 24px; right: 24px; z-index: 200;
-    background: #1a0a0a; border: 1px solid rgba(255,68,68,0.4); color: #ff8888;
-    padding: 14px 20px; border-radius: 12px; font-size: 13px;
-    display: flex; align-items: center; gap: 10px; max-width: 380px;
-    transform: translateY(100px); opacity: 0;
-    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* FILTERS */
+  .filters-section {
+    padding: 24px 40px;
+    background: var(--deep);
+    border-bottom: 1px solid var(--border);
   }
-  .toast.show { transform: translateY(0); opacity: 1; }
-  .toast.success { background: #0a1a0a; border-color: rgba(46,204,113,0.4); color: #5ee68b; }
-  .toast.info    { background: #0a1020; border-color: rgba(201,168,76,0.4);  color: var(--gold); }
+  .filters-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 16px; }
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    align-items: end;
+  }
+  .filter-group label {
+    display: block; font-size: 11px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;
+  }
+  .filter-group select, .filter-group input {
+    width: 100%; background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border); border-radius: 8px;
+    color: white; padding: 9px 12px; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; outline: none; cursor: pointer;
+    transition: border-color 0.2s;
+    -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394aab8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
+    padding-right: 32px;
+  }
+  .filter-group input {
+    background-image: none; padding-right: 12px;
+  }
+  .filter-group select:focus, .filter-group input:focus { border-color: var(--teal); }
+  .filter-group select option { background: var(--deep); }
+  .filter-actions { display: flex; gap: 8px; align-items: flex-end; }
+  .clear-btn {
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    padding: 9px 16px; border-radius: 8px; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .clear-btn:hover { border-color: var(--muted); color: white; }
 
-  /* ── CRUISE LINES ── */
-  .section-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 20px; }
-  .cruise-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 48px; }
-  .cruise-toggle-row { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.3s ease; animation: slideIn 0.4s ease both; }
-  .cruise-toggle-row:hover { border-color: var(--gold); background: rgba(201,168,76,0.05); transform: translateX(4px); }
-  .cruise-toggle-row:nth-child(1) { animation-delay: 0.1s; }
-  .cruise-toggle-row:nth-child(2) { animation-delay: 0.2s; }
-  .cruise-toggle-row:nth-child(3) { animation-delay: 0.3s; }
-  @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
-  .cruise-info { display: flex; align-items: center; gap: 16px; }
-  .cruise-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
-  .norwegian .cruise-icon { background: rgba(0,150,255,0.15); }
-  .royal .cruise-icon     { background: rgba(255,100,50,0.15); }
-  .princess .cruise-icon  { background: rgba(200,150,255,0.15); }
-  .cruise-name { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
-  .cruise-meta { font-size: 13px; color: var(--text-muted); }
-  .toggle-wrap { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-  .toggle-label { font-size: 13px; font-weight: 500; color: var(--text-muted); transition: color 0.3s; min-width: 28px; }
-  .toggle-label.active { color: var(--success); }
-  .toggle { width: 52px; height: 28px; background: rgba(255,255,255,0.1); border-radius: 100px; position: relative; transition: background 0.3s ease; flex-shrink: 0; }
-  .toggle.on { background: var(--gold); }
-  .toggle::after { content: ''; position: absolute; width: 22px; height: 22px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
-  .toggle.on::after { transform: translateX(24px); }
+  /* LINE TOGGLES */
+  .line-toggles { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 0; }
+  .line-toggle {
+    padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500;
+    border: 1px solid var(--border); background: transparent; color: var(--muted);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .line-toggle.active { background: var(--teal); border-color: var(--teal); color: white; }
 
-  /* ── DETAILS ── */
-  .details-panel { display: none; animation: fadeUp 0.5s ease both; }
-  .details-panel.visible { display: block; }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-  .details-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-  .details-title { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; }
-  .results-count { font-size: 13px; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 6px 14px; border-radius: 100px; border: 1px solid var(--border); }
-  .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; padding: 20px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; }
-  .stat-item { text-align: center; }
-  .stat-value { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: var(--gold); }
-  .stat-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; }
-  .filter-bar { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
-  .filter-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 16px; border-radius: 100px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
-  .filter-btn:hover, .filter-btn.active { background: rgba(201,168,76,0.15); border-color: var(--gold); color: var(--gold); }
-  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-bottom: 48px; }
-  .cruise-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 24px; transition: all 0.3s ease; animation: fadeUp 0.4s ease both; position: relative; overflow: hidden; }
-  .cruise-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--gold), var(--gold-light)); opacity: 0; transition: opacity 0.3s; }
-  .cruise-card:hover { transform: translateY(-4px); border-color: rgba(201,168,76,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+  /* SORT TABS */
+  .sort-tabs { display: flex; gap: 6px; }
+  .sort-tab {
+    padding: 8px 14px; border-radius: 6px; font-size: 12px; font-weight: 500;
+    border: 1px solid var(--border); background: transparent; color: var(--muted);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .sort-tab.active { background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.4); color: var(--gold); }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: flex; gap: 0; padding: 0 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  .stat-item {
+    padding: 16px 32px 16px 0; margin-right: 32px;
+    border-right: 1px solid var(--border);
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  .stat-value { font-size: 22px; font-weight: 600; margin-top: 2px; }
+  .stat-value.green { color: #4ac994; }
+  .stat-value.red { color: #ff7070; }
+
+  /* RESULTS COUNT + CONTROLS */
+  .results-header {
+    padding: 16px 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .results-count { font-size: 14px; color: var(--muted); }
+  .results-count strong { color: white; font-size: 16px; }
+  .controls-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* CURRENCY TOGGLE */
+  .currency-toggle {
+    display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+  }
+  .currency-btn {
+    padding: 7px 14px; font-size: 12px; font-weight: 600;
+    background: transparent; border: none; color: var(--muted); cursor: pointer;
+    transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+  }
+  .currency-btn.active { background: var(--ocean); color: white; }
+
+  /* GRID */
+  .cards-grid {
+    padding: 0 40px 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+  }
+
+  /* CARD */
+  .cruise-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .cruise-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--teal), var(--gold));
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .cruise-card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-2px); }
   .cruise-card:hover::before { opacity: 1; }
-  .card-line-badge { display: inline-block; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; margin-bottom: 14px; font-weight: 500; }
-  .badge-norwegian     { background: rgba(0,150,255,0.15); color: #4db8ff; }
-  .badge-royal_caribbean { background: rgba(255,100,50,0.15); color: #ff8c69; }
-  .badge-princess      { background: rgba(200,150,255,0.15); color: #c896ff; }
-  .card-ship  { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; margin-bottom: 8px; line-height: 1.3; }
-  .card-route { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
-  .card-dates { display: flex; gap: 16px; margin-bottom: 16px; }
-  .date-item  { flex: 1; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 10px 12px; }
-  .date-label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
-  .date-value { font-size: 13px; font-weight: 500; }
-  .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 16px; border-top: 1px solid var(--border); }
-  .duration-badge { font-size: 12px; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 6px; }
-  .price-display { text-align: right; }
-  .price-label  { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); }
-  .price-amount { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--gold); }
-  .price-currency { font-size: 12px; color: var(--text-muted); margin-left: 4px; }
-  .live-tag { font-size: 9px; color: var(--success); letter-spacing: 1px; position: absolute; top: 12px; right: 14px; opacity: 0.8; }
-  .empty-state { text-align: center; padding: 64px 24px; color: var(--text-muted); grid-column: 1/-1; }
-  .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
-  .empty-state h3 { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--white); margin-bottom: 8px; }
-  @media (max-width: 600px) { .stats-bar { grid-template-columns: repeat(2,1fr); } .cards-grid { grid-template-columns: 1fr; } .live-bar { gap: 12px; } }
+
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .card-line { display: flex; align-items: center; gap: 6px; }
+  .line-badge {
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+    padding: 3px 8px; border-radius: 4px;
+  }
+  .line-badge.norwegian { background: rgba(14,122,138,0.25); color: #6dd4e0; }
+  .line-badge.royal_caribbean { background: rgba(74,158,255,0.2); color: #7dc4ff; }
+  .line-badge.princess { background: rgba(201,168,76,0.2); color: var(--gold); }
+
+  .trip-type {
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 3px 8px; border-radius: 4px;
+  }
+  .trip-type.round { background: rgba(255,255,255,0.08); color: var(--muted); }
+  .trip-type.oneway { background: rgba(74,201,148,0.15); color: #7de8b8; }
+
+  .card-title { font-family: 'Playfair Display', serif; font-size: 16px; line-height: 1.3; margin-bottom: 10px; }
+  .card-ship { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+
+  .card-route { font-size: 13px; color: #b0c8d8; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .card-dates { font-size: 12px; color: var(--muted); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+  .card-duration { font-size: 12px; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+  .card-dest { font-size: 12px; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+
+  .price-section { border-top: 1px solid var(--border); padding-top: 14px; }
+  .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .price-item { background: rgba(255,255,255,0.03); border-radius: 6px; padding: 8px 10px; }
+  .price-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 3px; }
+  .price-usd { font-size: 15px; font-weight: 600; color: var(--usd); }
+  .price-eur { font-size: 12px; color: var(--eur); margin-top: 1px; opacity: 0.9; }
+  .price-na { font-size: 13px; color: rgba(255,255,255,0.2); }
+
+  .best-price-row {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .best-price-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  .best-price-value { font-size: 20px; font-weight: 700; color: var(--gold); }
+  .best-price-eur { font-size: 13px; color: var(--eur); margin-top: 1px; }
+
+  .book-btn {
+    display: inline-block; margin-top: 12px; width: 100%;
+    background: linear-gradient(135deg, var(--teal), #0d8fa0);
+    color: white; text-decoration: none; text-align: center;
+    padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    border: none; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+  .book-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  /* EMPTY / LOADING */
+  .empty-state {
+    grid-column: 1/-1; text-align: center; padding: 60px 20px;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-state h3 { font-size: 18px; margin-bottom: 8px; color: white; }
+
+  /* LOADING SKELETON */
+  .skeleton-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px;
+  }
+  .skel { background: rgba(255,255,255,0.06); border-radius: 4px; animation: shimmer 1.5s infinite; }
+  @keyframes shimmer { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    header, #scraped-bar, .filters-section, .stats-bar, .results-header, .cards-grid {
+      padding-left: 16px; padding-right: 16px;
+    }
+    .cards-grid { grid-template-columns: 1fr; }
+    .stats-bar { flex-wrap: wrap; }
+    .stat-item { border-right: none; padding-right: 0; margin-right: 0; }
+  }
 </style>
 </head>
 <body>
 
-<!-- Loading Overlay (shown only on first API trigger) -->
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="loading-spinner"></div>
-  <div class="loading-text">Starting Scrapers</div>
-  <div class="loading-sub">Firing up Apify actors…</div>
+<header>
+  <div class="logo">
+    <h1>⚓ Cruise Price <span>Explorer</span></h1>
+    <p>Live prices from Norwegian · Royal Caribbean · Princess via Apify + Azure</p>
+  </div>
+  <div class="header-right">
+    <div class="live-badge"><span class="live-dot"></span> Azure Live Data</div>
+    <button class="refresh-btn" id="refreshBtn" onclick="triggerRefresh()">
+      <span id="refreshIcon">↻</span> Refresh Prices
+    </button>
+  </div>
+</header>
+
+<div id="scraped-bar">
+  <span>🕐 Last scraped — <strong id="scraped-norwegian">—</strong> Norwegian</span>
+  <span>· <strong id="scraped-royal_caribbean">—</strong> Royal Caribbean</span>
+  <span>· <strong id="scraped-princess">—</strong> Princess</span>
 </div>
 
-<!-- Toast -->
-<div class="toast" id="toast"></div>
+<div id="status-banner"></div>
 
-<div class="container">
-  <header>
-    <div class="header-badge">⚓ Live Azure Data</div>
-    <h1>Cruise Price<br><span>Explorer</span></h1>
-    <p class="subtitle">Real prices from Norwegian, Royal Caribbean & Princess — refreshed live via Apify + Azure</p>
-
-    <div class="live-bar">
-      <div class="live-indicator">
-        <div class="live-dot" id="liveDot"></div>
-        <span id="liveStatus">Live</span>
-      </div>
-      <div class="last-updated" id="lastUpdated">Not yet refreshed</div>
-      <button class="refresh-btn" id="refreshBtn" onclick="handleRefresh()">
-        <span class="refresh-icon" id="refreshIcon">↻</span>
-        Refresh Prices
-      </button>
-    </div>
-  </header>
-
-  <!-- Scraper status banner — appears while Apify is running -->
-  <div class="scraper-banner" id="scraperBanner">
-    <div class="scraper-banner-title">⚙ Scraper Status</div>
-    <div class="scraper-lines" id="scraperLines"></div>
-  </div>
-
-  <div class="section-label">⚙ Select Cruise Lines to Explore</div>
-  <div class="cruise-list">
-    <div class="cruise-toggle-row norwegian" onclick="toggleLine('norwegian')">
-      <div class="cruise-info">
-        <div class="cruise-icon">🚢</div>
-        <div>
-          <div class="cruise-name">Norwegian Cruise Line</div>
-          <div class="cruise-meta" id="meta-norwegian">Loading…</div>
-        </div>
-      </div>
-      <div class="toggle-wrap">
-        <span class="toggle-label" id="label-norwegian">No</span>
-        <div class="toggle" id="toggle-norwegian"></div>
+<!-- FILTERS -->
+<div class="filters-section">
+  <div class="filters-title">Filter & Sort</div>
+  <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:14px; align-items:center;">
+    <div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;">Cruise Line</div>
+      <div class="line-toggles">
+        <button class="line-toggle active" onclick="toggleLine('all',this)">All</button>
+        <button class="line-toggle" onclick="toggleLine('norwegian',this)">🚢 Norwegian</button>
+        <button class="line-toggle" onclick="toggleLine('royal_caribbean',this)">👑 Royal Caribbean</button>
+        <button class="line-toggle" onclick="toggleLine('princess',this)">👸 Princess</button>
       </div>
     </div>
-    <div class="cruise-toggle-row royal" onclick="toggleLine('royal_caribbean')">
-      <div class="cruise-info">
-        <div class="cruise-icon">👑</div>
-        <div>
-          <div class="cruise-name">Royal Caribbean</div>
-          <div class="cruise-meta" id="meta-royal_caribbean">Loading…</div>
-        </div>
-      </div>
-      <div class="toggle-wrap">
-        <span class="toggle-label" id="label-royal_caribbean">No</span>
-        <div class="toggle" id="toggle-royal_caribbean"></div>
-      </div>
-    </div>
-    <div class="cruise-toggle-row princess" onclick="toggleLine('princess')">
-      <div class="cruise-info">
-        <div class="cruise-icon">👸</div>
-        <div>
-          <div class="cruise-name">Princess Cruises</div>
-          <div class="cruise-meta" id="meta-princess">Loading…</div>
-        </div>
-      </div>
-      <div class="toggle-wrap">
-        <span class="toggle-label" id="label-princess">No</span>
-        <div class="toggle" id="toggle-princess"></div>
+    <div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;">Sort By</div>
+      <div class="sort-tabs">
+        <button class="sort-tab active" onclick="setSort('price',this)">💰 Cheapest</button>
+        <button class="sort-tab" onclick="setSort('date',this)">📅 Earliest</button>
+        <button class="sort-tab" onclick="setSort('expensive',this)">💎 Priciest</button>
       </div>
     </div>
   </div>
 
-  <div class="details-panel" id="detailsPanel">
-    <div class="details-header">
-      <div class="details-title">Cruise Results</div>
-      <div class="results-count" id="resultsCount">0 cruises</div>
+  <div class="filters-grid">
+    <div class="filter-group">
+      <label>Departure Port</label>
+      <select id="filterDep" onchange="applyFilters()">
+        <option value="">All Ports</option>
+      </select>
     </div>
-    <div class="stats-bar">
-      <div class="stat-item"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total Cruises</div></div>
-      <div class="stat-item"><div class="stat-value" id="statMin">—</div><div class="stat-label">Lowest Price</div></div>
-      <div class="stat-item"><div class="stat-value" id="statMax">—</div><div class="stat-label">Highest Price</div></div>
-      <div class="stat-item"><div class="stat-value" id="statAvg">—</div><div class="stat-label">Avg Price</div></div>
+    <div class="filter-group">
+      <label>Arrival Port</label>
+      <select id="filterArr" onchange="applyFilters()">
+        <option value="">All Ports</option>
+      </select>
     </div>
-    <div class="filter-bar">
-      <button class="filter-btn active" onclick="filterBy('all', this)">All</button>
-      <button class="filter-btn" onclick="filterBy('norwegian', this)">Norwegian</button>
-      <button class="filter-btn" onclick="filterBy('royal_caribbean', this)">Royal Caribbean</button>
-      <button class="filter-btn" onclick="filterBy('princess', this)">Princess</button>
-      <button class="filter-btn" onclick="sortBy('price', this)">💰 Cheapest First</button>
-      <button class="filter-btn" onclick="sortBy('date', this)">📅 Earliest First</button>
-      <button class="filter-btn" onclick="sortBy('priceDesc', this)">💎 Most Expensive</button>
+    <div class="filter-group">
+      <label>Destination</label>
+      <select id="filterDest" onchange="applyFilters()">
+        <option value="">All Destinations</option>
+      </select>
     </div>
-    <div class="cards-grid" id="cardsGrid"></div>
+    <div class="filter-group">
+      <label>Trip Type</label>
+      <select id="filterTrip" onchange="applyFilters()">
+        <option value="">All Types</option>
+        <option value="round">🔄 Round Trip</option>
+        <option value="oneway">→ One Way</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Duration (nights)</label>
+      <select id="filterNights" onchange="applyFilters()">
+        <option value="">Any Duration</option>
+        <option value="1-5">Short (1–5 nights)</option>
+        <option value="6-9">Medium (6–9 nights)</option>
+        <option value="10-14">Long (10–14 nights)</option>
+        <option value="15+">Extended (15+ nights)</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Depart From</label>
+      <input type="month" id="filterMonth" onchange="applyFilters()" style="color-scheme:dark;">
+    </div>
+    <div class="filter-group">
+      <label>Max Price (USD)</label>
+      <input type="number" id="filterMaxPrice" placeholder="e.g. 2000" onchange="applyFilters()" min="0" step="100">
+    </div>
+    <div class="filter-group filter-actions">
+      <button class="clear-btn" onclick="clearFilters()">✕ Clear Filters</button>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-label">Total Cruises</div><div class="stat-value" id="statTotal">—</div></div>
+  <div class="stat-item"><div class="stat-label">Lowest Price</div><div class="stat-value green" id="statMin">—</div></div>
+  <div class="stat-item"><div class="stat-label">Highest Price</div><div class="stat-value red" id="statMax">—</div></div>
+  <div class="stat-item"><div class="stat-label">Avg Price</div><div class="stat-value" id="statAvg">—</div></div>
+  <div class="stat-item"><div class="stat-label">Round Trip</div><div class="stat-value" id="statRound">—</div></div>
+  <div class="stat-item"><div class="stat-label">One Way</div><div class="stat-value" id="statOneWay">—</div></div>
+</div>
+
+<!-- RESULTS HEADER -->
+<div class="results-header">
+  <div class="results-count"><strong id="resultCount">0</strong> cruises found</div>
+  <div class="controls-right">
+    <div style="font-size:12px;color:var(--muted);margin-right:4px;">Display currency:</div>
+    <div class="currency-toggle">
+      <button class="currency-btn active" id="btnUSD" onclick="setCurrency('USD')">USD $</button>
+      <button class="currency-btn" id="btnEUR" onclick="setCurrency('EUR')">EUR €</button>
+      <button class="currency-btn" id="btnBOTH" onclick="setCurrency('BOTH')">Both</button>
+    </div>
+  </div>
+</div>
+
+<!-- CARDS -->
+<div class="cards-grid" id="cardsGrid">
+  <div class="empty-state">
+    <div class="icon">⚓</div>
+    <h3>Click "Refresh Prices" to load cruise data</h3>
+    <p>Or wait — it will auto-load from last saved data</p>
   </div>
 </div>
 
 <script>
-// ─────────────────────────────────────────────────────────────
-// CONFIG — set your Azure Function base URL here
-// ─────────────────────────────────────────────────────────────
-const API_BASE = "https://cruisebot-func-asgrc7czhnhycdbe.centralindia-01.azurewebsites.net/api";
+const API = 'https://cruisebot-func-asgrc7czhnhycdbe.centralindia-01.azurewebsites.net/api';
+const USD_EUR = 0.92; // approx rate — update as needed
+const EUR_USD = 1 / USD_EUR;
 
-const POLL_INTERVAL_MS  = 30 * 1000;  // poll /refresh-status every 30s
-const MAX_POLL_ATTEMPTS = 20;          // give up after 10 minutes
+let allCruises = [];
+let filteredCruises = [];
+let activeLine = 'all';
+let activeSort = 'price';
+let displayCurrency = 'BOTH';
+let pollInterval = null;
 
-// ─────────────────────────────────────────────────────────────
-// STATE
-// ─────────────────────────────────────────────────────────────
-let CRUISE_DATA    = { norwegian: [], royal_caribbean: [], princess: [] };
-let activeLines    = new Set();
-let currentFilter  = 'all';
-let currentSort    = 'date';
-let dataSource     = 'none';   // 'none' | 'api' | 'fallback'
-let pollTimer      = null;
-let pollAttempts   = 0;
-let isRefreshing   = false;
+// ─── INIT ───────────────────────────────────────────────────
+window.onload = () => { loadCruises(); };
 
-const LINE_LABELS  = { norwegian: 'Norwegian', royal_caribbean: 'Royal Caribbean', princess: 'Princess' };
-const LINE_ICONS   = { norwegian: '🚢', royal_caribbean: '👑', princess: '👸' };
-const BADGE_CLASSES = { norwegian: 'badge-norwegian', royal_caribbean: 'badge-royal_caribbean', princess: 'badge-princess' };
-
-// ─────────────────────────────────────────────────────────────
-// ON PAGE LOAD — fetch latest data from /api/cruises
-// ─────────────────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', async () => {
-  await loadLatestData();
-});
-
-async function loadLatestData() {
+async function loadCruises() {
+  showSkeletons();
   try {
-    const res  = await fetch(`${API_BASE}/cruises?line=all&sort=price`);
-    const json = await res.json();
-
-    if (json.status === 'success' && json.data?.length > 0) {
-      ingestApiData(json.data);
-      updateLastUpdated(json.last_scraped);
-      setLiveStatus('ready', 'Live');
-      dataSource = 'api';
+    const res = await fetch(`${API}/cruises?sort=${activeSort}`);
+    const data = await res.json();
+    if (data.status === 'success') {
+      allCruises = data.data || [];
+      updateScrapedTimes(data.last_scraped);
+      populateFilters();
+      applyFilters();
     } else {
-      setLiveStatus('idle', 'No data');
-      updateMeta();
+      showEmpty('Could not load cruise data.');
     }
-  } catch (e) {
-    console.warn('Could not load from API, showing empty state:', e);
-    setLiveStatus('idle', 'API unreachable');
-    updateMeta();
+  } catch(e) {
+    showEmpty('API unreachable — check Function App status.');
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// REFRESH BUTTON HANDLER
-// Step 1: POST /api/refresh  → fires scrapers, returns run IDs instantly
-// Step 2: Poll /api/refresh-status every 30s until done
-// Step 3: Reload /api/cruises when status === 'done' | 'partial'
-// ─────────────────────────────────────────────────────────────
-async function handleRefresh() {
-  if (isRefreshing) return;
-  isRefreshing = true;
-
-  const btn     = document.getElementById('refreshBtn');
-  const overlay = document.getElementById('loadingOverlay');
-
-  btn.disabled = true;
-  btn.classList.add('spinning');
-  setLiveStatus('loading', 'Starting…');
-  overlay.classList.add('active');
-
-  try {
-    const res  = await fetch(`${API_BASE}/refresh`, { method: 'POST' });
-    const json = await res.json();
-
-    overlay.classList.remove('active');
-
-    if (json.status === 'started') {
-      showToast(`🚀 Scrapers started for: ${json.started.join(', ')}. Checking status every 30s…`, 'info');
-      setLiveStatus('loading', 'Scraping…');
-      showScraperBanner(json.started, []);
-      startPolling();
-    } else {
-      showToast('❌ Failed to start scrapers: ' + (json.errors ? JSON.stringify(json.errors) : 'unknown error'), 'error');
-      resetRefreshBtn();
+// ─── SCRAPED TIMES ──────────────────────────────────────────
+function updateScrapedTimes(last_scraped) {
+  if (!last_scraped) return;
+  for (const [line, ts] of Object.entries(last_scraped)) {
+    const el = document.getElementById(`scraped-${line}`);
+    if (el && ts) {
+      // ts format: 20260227_150000 → parse
+      try {
+        const y = ts.slice(0,4), mo = ts.slice(4,6), d = ts.slice(6,8);
+        const h = ts.slice(9,11), mi = ts.slice(11,13);
+        const dt = new Date(`${y}-${mo}-${d}T${h}:${mi}:00Z`);
+        el.textContent = isNaN(dt) ? ts : dt.toLocaleString(undefined, {
+          month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', timeZoneName:'short'
+        });
+      } catch { el.textContent = ts; }
     }
-  } catch (e) {
-    overlay.classList.remove('active');
-    showToast('❌ Could not reach API: ' + e.message, 'error');
-    resetRefreshBtn();
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// POLLING — calls /api/refresh-status every 30s
-// ─────────────────────────────────────────────────────────────
-function startPolling() {
-  stopPolling();
-  pollAttempts = 0;
-  pollTimer    = setInterval(pollStatus, POLL_INTERVAL_MS);
-  // Also fire immediately after 5s (give Apify a moment to register the run)
-  setTimeout(pollStatus, 5000);
+// ─── POPULATE FILTER DROPDOWNS ──────────────────────────────
+function populateFilters() {
+  const deps = new Set(), arrs = new Set(), dests = new Set();
+  for (const c of allCruises) {
+    if (c.departurePort) deps.add(c.departurePort);
+    if (c.arrivalPort) arrs.add(c.arrivalPort);
+    const dest = c.destination;
+    if (dest) {
+      // destination might be array-like string
+      const parts = Array.isArray(dest) ? dest : String(dest).replace(/[\[\]'"]/g,'').split(',');
+      parts.forEach(p => { const t = p.trim(); if(t) dests.add(t); });
+    }
+  }
+  fillSelect('filterDep', [...deps].sort(), 'All Ports');
+  fillSelect('filterArr', [...arrs].sort(), 'All Ports');
+  fillSelect('filterDest', [...dests].sort(), 'All Destinations');
 }
 
-function stopPolling() {
-  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+function fillSelect(id, items, placeholder) {
+  const sel = document.getElementById(id);
+  const current = sel.value;
+  sel.innerHTML = `<option value="">${placeholder}</option>`;
+  items.forEach(item => {
+    const o = document.createElement('option');
+    o.value = item; o.textContent = item;
+    if (item === current) o.selected = true;
+    sel.appendChild(o);
+  });
 }
 
-async function pollStatus() {
-  pollAttempts++;
-  if (pollAttempts > MAX_POLL_ATTEMPTS) {
-    stopPolling();
-    showToast('⏱ Scraping is taking longer than expected. Data will update automatically when ready.', 'info');
-    resetRefreshBtn();
+// ─── FILTERS ────────────────────────────────────────────────
+function applyFilters() {
+  const dep = document.getElementById('filterDep').value;
+  const arr = document.getElementById('filterArr').value;
+  const dest = document.getElementById('filterDest').value;
+  const trip = document.getElementById('filterTrip').value;
+  const nights = document.getElementById('filterNights').value;
+  const month = document.getElementById('filterMonth').value;
+  const maxPrice = parseFloat(document.getElementById('filterMaxPrice').value) || null;
+
+  filteredCruises = allCruises.filter(c => {
+    if (activeLine !== 'all' && c.cruise_line !== activeLine) return false;
+    if (dep && c.departurePort !== dep) return false;
+    if (arr && c.arrivalPort !== arr) return false;
+    if (dest) {
+      const d = String(c.destination || '');
+      if (!d.toLowerCase().includes(dest.toLowerCase())) return false;
+    }
+    if (trip) {
+      const isRound = c.departurePort === c.arrivalPort || !c.arrivalPort;
+      if (trip === 'round' && !isRound) return false;
+      if (trip === 'oneway' && isRound) return false;
+    }
+    if (nights) {
+      const n = extractNights(c.duration_label);
+      if (nights === '1-5' && !(n >= 1 && n <= 5)) return false;
+      if (nights === '6-9' && !(n >= 6 && n <= 9)) return false;
+      if (nights === '10-14' && !(n >= 10 && n <= 14)) return false;
+      if (nights === '15+' && !(n >= 15)) return false;
+    }
+    if (month && c.departureDate) {
+      const depMonth = String(c.departureDate).slice(0,7);
+      if (depMonth !== month) return false;
+    }
+    if (maxPrice) {
+      // convert to USD for comparison
+      const priceUSD = getPriceInUSD(c);
+      if (!priceUSD || priceUSD > maxPrice) return false;
+    }
+    return true;
+  });
+
+  // sort
+  if (activeSort === 'price') filteredCruises.sort((a,b) => (getPriceInUSD(a)||9999999) - (getPriceInUSD(b)||9999999));
+  else if (activeSort === 'date') filteredCruises.sort((a,b) => String(a.departureDate||'').localeCompare(String(b.departureDate||'')));
+  else if (activeSort === 'expensive') filteredCruises.sort((a,b) => (getPriceInUSD(b)||0) - (getPriceInUSD(a)||0));
+
+  updateStats();
+  renderCards();
+}
+
+function extractNights(label) {
+  if (!label) return 0;
+  const m = String(label).match(/(\d+)/);
+  return m ? parseInt(m[1]) : 0;
+}
+
+function getPriceInUSD(c) {
+  const p = parseFloat(c.best_price) || 0;
+  if (!p) return null;
+  if (c.currency === 'EUR') return p * EUR_USD;
+  return p; // already USD
+}
+
+function getPriceInEUR(c) {
+  const p = parseFloat(c.best_price) || 0;
+  if (!p) return null;
+  if (c.currency === 'USD') return p * USD_EUR;
+  return p;
+}
+
+function convertPrice(amount, fromCurrency) {
+  if (!amount) return null;
+  const a = parseFloat(amount);
+  if (!a) return null;
+  return fromCurrency === 'EUR' ? { usd: a * EUR_USD, eur: a } : { usd: a, eur: a * USD_EUR };
+}
+
+// ─── STATS ──────────────────────────────────────────────────
+function updateStats() {
+  const pricesUSD = filteredCruises.map(c => getPriceInUSD(c)).filter(Boolean);
+  const rounds = filteredCruises.filter(c => c.departurePort === c.arrivalPort || !c.arrivalPort).length;
+  document.getElementById('statTotal').textContent = filteredCruises.length;
+  document.getElementById('statMin').textContent = pricesUSD.length ? '$' + Math.round(Math.min(...pricesUSD)).toLocaleString() : '—';
+  document.getElementById('statMax').textContent = pricesUSD.length ? '$' + Math.round(Math.max(...pricesUSD)).toLocaleString() : '—';
+  document.getElementById('statAvg').textContent = pricesUSD.length ? '$' + Math.round(pricesUSD.reduce((a,b)=>a+b,0)/pricesUSD.length).toLocaleString() : '—';
+  document.getElementById('statRound').textContent = rounds;
+  document.getElementById('statOneWay').textContent = filteredCruises.length - rounds;
+  document.getElementById('resultCount').textContent = filteredCruises.length;
+}
+
+// ─── RENDER CARDS ───────────────────────────────────────────
+function renderCards() {
+  const grid = document.getElementById('cardsGrid');
+  if (!filteredCruises.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="icon">🔍</div><h3>No cruises match your filters</h3><p>Try adjusting or clearing your filters</p></div>`;
     return;
   }
+  grid.innerHTML = filteredCruises.map(c => cardHTML(c)).join('');
+}
+
+function cardHTML(c) {
+  const line = c.cruise_line || '';
+  const lineNames = { norwegian: 'Norwegian', royal_caribbean: 'Royal Caribbean', princess: 'Princess' };
+  const isRound = c.departurePort === c.arrivalPort || !c.arrivalPort;
+  const tripType = isRound
+    ? `<span class="trip-type round">🔄 Round</span>`
+    : `<span class="trip-type oneway">→ One Way</span>`;
+
+  const dep = c.departurePort || '—';
+  const arr = c.arrivalPort || dep;
+  const route = isRound ? `🔄 Round trip · ${dep}` : `${dep} → ${arr}`;
+
+  // Price display
+  const priceTypes = [
+    { key: 'interior_price', label: 'Interior' },
+    { key: 'oceanview_price', label: 'Ocean View' },
+    { key: 'balcony_price', label: 'Balcony' },
+    { key: 'minisuite_price', label: 'Mini Suite' },
+    { key: 'suite_price', label: 'Suite' },
+  ];
+
+  const priceHTML = priceTypes.map(pt => {
+    const raw = c[pt.key];
+    if (!raw) return '';
+    const prices = convertPrice(raw, c.currency);
+    if (!prices) return '';
+    return `<div class="price-item">
+      <div class="price-label">${pt.label}</div>
+      ${displayCurrency === 'USD' ? `<div class="price-usd">$${Math.round(prices.usd).toLocaleString()}</div>` : ''}
+      ${displayCurrency === 'EUR' ? `<div class="price-usd" style="color:var(--eur)">€${Math.round(prices.eur).toLocaleString()}</div>` : ''}
+      ${displayCurrency === 'BOTH' ? `<div class="price-usd">$${Math.round(prices.usd).toLocaleString()}</div><div class="price-eur">€${Math.round(prices.eur).toLocaleString()}</div>` : ''}
+    </div>`;
+  }).filter(Boolean).join('');
+
+  const bestPrices = convertPrice(c.best_price, c.currency);
+  const bestPriceHTML = bestPrices ? `
+    <div class="best-price-row">
+      <div class="best-price-label">Best Price</div>
+      <div style="text-align:right">
+        ${displayCurrency === 'EUR' ? `<div class="best-price-value" style="color:var(--eur)">€${Math.round(bestPrices.eur).toLocaleString()}</div>` : `<div class="best-price-value">$${Math.round(bestPrices.usd).toLocaleString()}</div>`}
+        ${displayCurrency === 'BOTH' ? `<div class="best-price-value">$${Math.round(bestPrices.usd).toLocaleString()}</div><div class="best-price-eur">€${Math.round(bestPrices.eur).toLocaleString()}</div>` : ''}
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">orig. ${c.currency === 'EUR' ? '€' : '$'}${Math.round(parseFloat(c.best_price)).toLocaleString()} ${c.currency}</div>
+      </div>
+    </div>` : '';
+
+  // Format date
+  function fmtDate(d) {
+    if (!d) return '—';
+    try { return new Date(d).toLocaleDateString(undefined, {month:'short',day:'numeric',year:'numeric'}); }
+    catch { return d; }
+  }
+
+  const dest = c.destination ? String(c.destination).replace(/[\[\]'"]/g,'').slice(0,40) : '';
+  const nights = extractNights(c.duration_label);
+
+  return `<div class="cruise-card">
+    <div class="card-header">
+      <div class="card-line">
+        <span class="line-badge ${line}">${lineNames[line] || line}</span>
+      </div>
+      ${tripType}
+    </div>
+    <div class="card-title">${c.title || 'Cruise Voyage'}</div>
+    ${c.ship ? `<div class="card-ship">🚢 ${c.ship}</div>` : ''}
+    <div class="card-route">📍 ${route}</div>
+    ${dest ? `<div class="card-dest">🌊 ${dest}</div>` : ''}
+    <div class="card-dates">📅 ${fmtDate(c.departureDate)} → ${fmtDate(c.arrivalDate)}</div>
+    ${nights ? `<div class="card-duration">🌙 ${nights} nights</div>` : c.duration_label ? `<div class="card-duration">🌙 ${c.duration_label}</div>` : ''}
+    <div class="price-section">
+      ${priceHTML ? `<div class="price-grid">${priceHTML}</div>` : ''}
+      ${bestPriceHTML}
+      ${c.booking_url ? `<a href="${c.booking_url}" target="_blank" class="book-btn">Book Now →</a>` : ''}
+    </div>
+  </div>`;
+}
+
+// ─── LINE TOGGLE ────────────────────────────────────────────
+function toggleLine(line, btn) {
+  activeLine = line;
+  document.querySelectorAll('.line-toggle').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function setSort(sort, btn) {
+  activeSort = sort;
+  document.querySelectorAll('.sort-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function setCurrency(cur) {
+  displayCurrency = cur;
+  ['USD','EUR','BOTH'].forEach(c => document.getElementById('btn'+c).classList.toggle('active', c === cur));
+  renderCards();
+}
+
+function clearFilters() {
+  ['filterDep','filterArr','filterDest','filterTrip','filterNights'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('filterMonth').value = '';
+  document.getElementById('filterMaxPrice').value = '';
+  applyFilters();
+}
+
+// ─── REFRESH ────────────────────────────────────────────────
+async function triggerRefresh() {
+  const btn = document.getElementById('refreshBtn');
+  const icon = document.getElementById('refreshIcon');
+  btn.disabled = true;
+  icon.innerHTML = '<span class="spin">↻</span>';
+  showBanner('running', '⏳ Starting scrapers — this takes 3–8 minutes. Checking every 30s…');
 
   try {
-    const res  = await fetch(`${API_BASE}/refresh-status`);
-    const json = await res.json();
+    await fetch(`${API}/refresh`, { method: 'POST' });
+    startPolling();
+  } catch(e) {
+    showBanner('failed', '❌ Could not start refresh: ' + e.message);
+    resetRefreshBtn();
+  }
+}
 
-    // Update scraper banner
-    if (json.lines) {
-      const running = Object.keys(json.lines).filter(l => json.lines[l].status === 'RUNNING');
-      const done    = Object.keys(json.lines).filter(l => json.lines[l].csv_saved);
-      const failed  = Object.keys(json.lines).filter(l =>
-        ['FAILED','ABORTED','TIMED-OUT','FAILED_TO_START'].includes(json.lines[l].status) && !json.lines[l].csv_saved
-      );
-      showScraperBanner(running, done, failed);
+function startPolling() {
+  clearInterval(pollInterval);
+  pollInterval = setInterval(checkStatus, 30000);
+  checkStatus();
+}
+
+async function checkStatus() {
+  try {
+    const res = await fetch(`${API}/refresh-status`);
+    const data = await res.json();
+    const status = data.status;
+    showBanner(status, data.message || status);
+
+    if (status === 'done' || status === 'partial') {
+      clearInterval(pollInterval);
+      resetRefreshBtn();
+      await loadCruises();
+    } else if (status === 'failed') {
+      clearInterval(pollInterval);
+      resetRefreshBtn();
     }
 
-    if (json.status === 'done' || json.status === 'partial') {
-      stopPolling();
-      showToast(json.message, json.status === 'done' ? 'success' : 'info');
-
-      // Reload fresh data from blob
-      await loadLatestData();
-      if (activeLines.size > 0) renderDetails();
-      resetRefreshBtn();
-
-    } else if (json.status === 'failed') {
-      stopPolling();
-      showToast(json.message || '❌ All scrapers failed.', 'error');
-      resetRefreshBtn();
-
-    } else if (json.status === 'running') {
-      setLiveStatus('loading', `Scraping… (${pollAttempts * 30}s)`);
-    }
-  } catch (e) {
-    console.warn('Poll error:', e);
+    // Update last-scraped even during poll
+    if (data.last_scraped) updateScrapedTimes(data.last_scraped);
+  } catch(e) {
+    // keep polling silently
   }
 }
 
 function resetRefreshBtn() {
-  isRefreshing = false;
-  const btn    = document.getElementById('refreshBtn');
+  const btn = document.getElementById('refreshBtn');
+  const icon = document.getElementById('refreshIcon');
   btn.disabled = false;
-  btn.classList.remove('spinning');
-  if (dataSource === 'api') setLiveStatus('ready', 'Live');
-  else setLiveStatus('idle', 'No data');
+  icon.textContent = '↻';
 }
 
-// ─────────────────────────────────────────────────────────────
-// SCRAPER BANNER
-// ─────────────────────────────────────────────────────────────
-function showScraperBanner(running, done, failed = []) {
-  const banner = document.getElementById('scraperBanner');
-  const lines  = document.getElementById('scraperLines');
-
-  const allLines = ['norwegian', 'royal_caribbean', 'princess'];
-  lines.innerHTML = allLines.map(line => {
-    let dotClass = 'waiting', label = 'Waiting';
-    if (running.includes(line))      { dotClass = 'running'; label = 'Scraping…'; }
-    else if (done.includes(line))    { dotClass = 'done';    label = 'Updated ✓'; }
-    else if (failed.includes(line))  { dotClass = 'failed';  label = 'Failed'; }
-    return `
-      <div class="scraper-line-item">
-        <div class="scraper-dot ${dotClass}"></div>
-        <span>${LINE_ICONS[line]} ${LINE_LABELS[line]}: <strong>${label}</strong></span>
-      </div>`;
-  }).join('');
-
-  banner.classList.add('visible');
-
-  // Hide banner once all done
-  if (done.length + failed.length === allLines.length) {
-    setTimeout(() => banner.classList.remove('visible'), 5000);
-  }
+function showBanner(type, msg) {
+  const b = document.getElementById('status-banner');
+  b.style.display = 'block';
+  b.className = `${type}`;
+  b.id = 'status-banner';
+  b.textContent = msg;
 }
 
-// ─────────────────────────────────────────────────────────────
-// INGEST API DATA → CRUISE_DATA
-// ─────────────────────────────────────────────────────────────
-function ingestApiData(records) {
-  CRUISE_DATA = { norwegian: [], royal_caribbean: [], princess: [] };
-
-  records.forEach(r => {
-    const line = r.cruise_line;
-    if (!CRUISE_DATA[line]) return;
-    CRUISE_DATA[line].push({
-      ship:          r.ship || r.title || 'Unknown Ship',
-      departure:     r.departureDate || '',
-      arrival:       r.arrivalDate   || '',
-      departurePort: r.departurePort || '—',
-      arrivalPort:   r.arrivalPort   || '—',
-      duration:      parseDuration(r.duration_label),
-      price:         parseFloat(r.best_price || r.interior_price || 0),
-      currency:      r.currency || CURRENCY_MAP[line] || 'USD',
-      destination:   r.destination || '',
-      booking_url:   r.booking_url  || '',
-      route:         r.route        || '',
-    });
-  });
-
-  updateMeta();
-  if (activeLines.size > 0) renderDetails();
-}
-
-function parseDuration(label) {
-  if (!label) return 7;
-  const match = String(label).match(/(\d+)/);
-  return match ? parseInt(match[1]) : 7;
-}
-
-const CURRENCY_MAP = { norwegian: 'EUR', royal_caribbean: 'USD', princess: 'USD' };
-
-function updateMeta() {
-  Object.keys(CRUISE_DATA).forEach(line => {
-    const data   = CRUISE_DATA[line];
-    const el     = document.getElementById(`meta-${line}`);
-    if (!el) return;
-    if (!data.length) { el.textContent = 'No data — click Refresh'; return; }
-    const prices = data.map(d => d.price).filter(p => p > 0);
-    const min    = prices.length ? Math.min(...prices) : 0;
-    const dests  = [...new Set(data.map(d => d.destination || d.arrivalPort).filter(Boolean))].slice(0, 4).join(', ');
-    const cur    = data[0]?.currency || '';
-    el.textContent = `${data.length} cruises · From ${min.toLocaleString()} ${cur} · ${dests || 'Various'}`;
-  });
-}
-
-function updateLastUpdated(last_scraped) {
-  if (!last_scraped) return;
-  const parts = Object.values(last_scraped).filter(Boolean);
-  if (!parts.length) return;
-  const ts  = parts[0].replace(/_/g, ' ');
-  document.getElementById('lastUpdated').innerHTML = `Last scraped: <span>${ts}</span>`;
-}
-
-// ─────────────────────────────────────────────────────────────
-// LIVE DOT STATUS
-// ─────────────────────────────────────────────────────────────
-function setLiveStatus(state, label) {
-  const dot = document.getElementById('liveDot');
-  const txt = document.getElementById('liveStatus');
-  dot.className = 'live-dot' + (state === 'loading' ? ' loading' : state === 'ready' ? ' ready' : '');
-  txt.textContent = label;
-}
-
-// ─────────────────────────────────────────────────────────────
-// TOAST
-// ─────────────────────────────────────────────────────────────
-function showToast(msg, type = 'success') {
-  const toast = document.getElementById('toast');
-  toast.textContent = msg;
-  toast.className   = `toast ${type === 'success' ? 'success' : type === 'info' ? 'info' : ''} show`;
-  clearTimeout(toast._t);
-  toast._t = setTimeout(() => toast.classList.remove('show'), 5000);
-}
-
-// ─────────────────────────────────────────────────────────────
-// TOGGLE / FILTER / SORT / RENDER
-// ─────────────────────────────────────────────────────────────
-function toggleLine(line) {
-  const toggle = document.getElementById(`toggle-${line}`);
-  const label  = document.getElementById(`label-${line}`);
-  if (activeLines.has(line)) {
-    activeLines.delete(line);
-    toggle.classList.remove('on');
-    label.textContent = 'No';
-    label.classList.remove('active');
-  } else {
-    activeLines.add(line);
-    toggle.classList.add('on');
-    label.textContent = 'Yes';
-    label.classList.add('active');
-  }
-  renderDetails();
-}
-
-function filterBy(filter, btn) {
-  currentFilter = filter;
-  document.querySelectorAll('.filter-bar .filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderCards();
-}
-
-function sortBy(type, btn) {
-  currentSort = type;
-  btn.classList.add('active');
-  renderCards();
-}
-
-function getActiveData() {
-  let data = [];
-  activeLines.forEach(line => {
-    (CRUISE_DATA[line] || []).forEach(cruise => data.push({ ...cruise, line }));
-  });
-  return data;
-}
-
-function renderDetails() {
-  const panel = document.getElementById('detailsPanel');
-  if (activeLines.size === 0) { panel.classList.remove('visible'); return; }
-  panel.classList.add('visible');
-  renderStats();
-  renderCards();
-}
-
-function renderStats() {
-  const data   = getActiveData();
-  const prices = data.map(d => d.price).filter(p => p > 0);
-  document.getElementById('statTotal').textContent    = data.length;
-  document.getElementById('statMin').textContent      = prices.length ? Math.min(...prices).toLocaleString() : '—';
-  document.getElementById('statMax').textContent      = prices.length ? Math.max(...prices).toLocaleString() : '—';
-  document.getElementById('statAvg').textContent      = prices.length ? Math.round(prices.reduce((a,b)=>a+b,0)/prices.length).toLocaleString() : '—';
-  document.getElementById('resultsCount').textContent = `${data.length} cruise${data.length!==1?'s':''}`;
-}
-
-function renderCards() {
-  let data = getActiveData();
-  if (currentFilter !== 'all') data = data.filter(d => d.line === currentFilter);
-  if (currentSort === 'price')     data.sort((a,b) => a.price - b.price);
-  else if (currentSort === 'date') data.sort((a,b) => new Date(a.departure) - new Date(b.departure));
-  else if (currentSort === 'priceDesc') data.sort((a,b) => b.price - a.price);
-
+// ─── SKELETONS ──────────────────────────────────────────────
+function showSkeletons() {
   const grid = document.getElementById('cardsGrid');
-  if (!data.length) {
-    grid.innerHTML = `<div class="empty-state"><div class="icon">🌊</div><h3>No Results</h3><p>Try selecting a different cruise line or clicking Refresh</p></div>`;
-    return;
-  }
-
-  grid.innerHTML = data.map((cruise, i) => `
-    <div class="cruise-card" style="animation-delay:${i*0.04}s">
-      ${dataSource === 'api' ? '<span class="live-tag">● LIVE</span>' : ''}
-      <div class="card-line-badge ${BADGE_CLASSES[cruise.line]}">${LINE_LABELS[cruise.line]}</div>
-      <div class="card-ship">${cruise.ship}</div>
-      <div class="card-route">${cruise.route || `${cruise.departurePort} → ${cruise.arrivalPort}`}</div>
-      <div class="card-dates">
-        <div class="date-item"><div class="date-label">Departure</div><div class="date-value">${formatDate(cruise.departure)}</div></div>
-        <div class="date-item"><div class="date-label">Arrival</div><div class="date-value">${formatDate(cruise.arrival)}</div></div>
-      </div>
-      <div class="card-footer">
-        <div class="duration-badge">⏱ ${cruise.duration} nights</div>
-        <div class="price-display">
-          <div class="price-label">From</div>
-          <div class="price-amount">${cruise.price.toLocaleString()}<span class="price-currency">${cruise.currency}</span></div>
-        </div>
-      </div>
-      ${cruise.booking_url ? `<a href="${cruise.booking_url}" target="_blank" style="display:block;margin-top:12px;font-size:11px;color:var(--gold);text-align:right;text-decoration:none;letter-spacing:1px;">BOOK NOW →</a>` : ''}
-    </div>
-  `).join('');
+  grid.innerHTML = Array(6).fill(0).map(() => `
+    <div class="skeleton-card">
+      <div class="skel" style="height:16px;width:40%;margin-bottom:12px;"></div>
+      <div class="skel" style="height:20px;width:80%;margin-bottom:8px;"></div>
+      <div class="skel" style="height:14px;width:60%;margin-bottom:20px;"></div>
+      <div class="skel" style="height:80px;width:100%;"></div>
+    </div>`).join('');
 }
-
-function formatDate(d) {
-  if (!d) return '—';
-  const parsed = new Date(d);
-  if (isNaN(parsed)) return d;
-  return parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+function showEmpty(msg) {
+  document.getElementById('cardsGrid').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><h3>${msg}</h3></div>`;
 }
 </script>
 </body>
