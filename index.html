@@ -369,7 +369,6 @@
       <select id="filterTrip">
         <option value="">All Types</option>
         <option value="round">🔄 Round Trip</option>
-        <option value="oneway">→ One Way</option>
       </select>
     </div>
     <div class="filter-group">
@@ -399,13 +398,14 @@
 
 <!-- STATS -->
 <div class="stats-bar">
-  <div class="stat-item"><div class="stat-label">Fetched Total</div><div class="stat-value" id="statFetched">—</div></div>
+  <div class="stat-item"><div class="stat-label">Scraped Total</div><div class="stat-value" id="statFetched">—</div></div>
   <div class="stat-item"><div class="stat-label">Showing</div><div class="stat-value" id="statTotal">—</div></div>
   <div class="stat-item"><div class="stat-label">Lowest Price</div><div class="stat-value green" id="statMin">—</div></div>
   <div class="stat-item"><div class="stat-label">Highest Price</div><div class="stat-value red" id="statMax">—</div></div>
   <div class="stat-item"><div class="stat-label">Avg Price</div><div class="stat-value" id="statAvg">—</div></div>
-  <div class="stat-item"><div class="stat-label">Round Trip</div><div class="stat-value" id="statRound">—</div></div>
-  <div class="stat-item"><div class="stat-label">One Way</div><div class="stat-value" id="statOneWay">—</div></div>
+  <div class="stat-item"><div class="stat-label">🚢 Norwegian</div><div class="stat-value" id="statNorwegian">—</div></div>
+  <div class="stat-item"><div class="stat-label">👑 Royal Caribbean</div><div class="stat-value" id="statRoyal">—</div></div>
+  <div class="stat-item"><div class="stat-label">👸 Princess</div><div class="stat-value" id="statPrincess">—</div></div>
 </div>
 
 <!-- RESULTS HEADER -->
@@ -685,13 +685,13 @@ function convertPrice(amount, fromCurrency) {
 // ─── STATS ──────────────────────────────────────────────────
 function updateStats() {
   const pricesUSD = filteredCruises.map(c => getPriceInUSD(c)).filter(Boolean);
-  const rounds = filteredCruises.filter(c => isRoundTrip(c)).length;
   document.getElementById('statTotal').textContent = filteredCruises.length;
   document.getElementById('statMin').textContent = pricesUSD.length ? '$' + Math.round(Math.min(...pricesUSD)).toLocaleString() : '—';
   document.getElementById('statMax').textContent = pricesUSD.length ? '$' + Math.round(Math.max(...pricesUSD)).toLocaleString() : '—';
   document.getElementById('statAvg').textContent = pricesUSD.length ? '$' + Math.round(pricesUSD.reduce((a,b)=>a+b,0)/pricesUSD.length).toLocaleString() : '—';
-  document.getElementById('statRound').textContent = rounds;
-  document.getElementById('statOneWay').textContent = filteredCruises.length - rounds;
+  document.getElementById('statNorwegian').textContent = filteredCruises.filter(c => c.cruise_line === 'norwegian').length;
+  document.getElementById('statRoyal').textContent = filteredCruises.filter(c => c.cruise_line === 'royal_caribbean').length;
+  document.getElementById('statPrincess').textContent = filteredCruises.filter(c => c.cruise_line === 'princess').length;
   document.getElementById('resultCount').textContent = filteredCruises.length;
 }
 
