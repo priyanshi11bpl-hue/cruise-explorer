@@ -131,6 +131,13 @@
     font-size: 13px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
   }
   .clear-btn:hover { border-color: var(--muted); color: white; }
+  .search-btn {
+    background: var(--teal); border: none; color: white;
+    padding: 9px 20px; border-radius: 8px; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    flex: 1;
+  }
+  .search-btn:hover { background: #0d8fa0; transform: translateY(-1px); }
 
   /* LINE TOGGLES */
   .line-toggles { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 0; }
@@ -333,7 +340,7 @@
       <div class="sort-tabs">
         <button class="sort-tab active" onclick="setSort('price',this)">💰 Cheapest</button>
         <button class="sort-tab" onclick="setSort('date',this)">📅 Earliest</button>
-        <button class="sort-tab" onclick="setSort('expensive',this)">💎 Priciest</button>
+        <button class="sort-tab" onclick="setSort('expensive',this)">💎 Premium First</button>
       </div>
     </div>
   </div>
@@ -341,25 +348,25 @@
   <div class="filters-grid">
     <div class="filter-group">
       <label>Departure Port</label>
-      <select id="filterDep" onchange="applyFilters()">
+      <select id="filterDep">
         <option value="">All Ports</option>
       </select>
     </div>
     <div class="filter-group">
       <label>Arrival Port</label>
-      <select id="filterArr" onchange="applyFilters()">
+      <select id="filterArr">
         <option value="">All Ports</option>
       </select>
     </div>
     <div class="filter-group">
       <label>Destination</label>
-      <select id="filterDest" onchange="applyFilters()">
+      <select id="filterDest">
         <option value="">All Destinations</option>
       </select>
     </div>
     <div class="filter-group">
       <label>Trip Type</label>
-      <select id="filterTrip" onchange="applyFilters()">
+      <select id="filterTrip">
         <option value="">All Types</option>
         <option value="round">🔄 Round Trip</option>
         <option value="oneway">→ One Way</option>
@@ -367,7 +374,7 @@
     </div>
     <div class="filter-group">
       <label>Duration (nights)</label>
-      <select id="filterNights" onchange="applyFilters()">
+      <select id="filterNights">
         <option value="">Any Duration</option>
         <option value="1-5">Short (1–5 nights)</option>
         <option value="6-9">Medium (6–9 nights)</option>
@@ -376,22 +383,24 @@
       </select>
     </div>
     <div class="filter-group">
-      <label>Depart From</label>
-      <input type="month" id="filterMonth" onchange="applyFilters()" style="color-scheme:dark;">
+      <label>Depart From (Month)</label>
+      <input type="month" id="filterMonth" style="color-scheme:dark;">
     </div>
     <div class="filter-group">
       <label>Max Price (USD)</label>
-      <input type="number" id="filterMaxPrice" placeholder="e.g. 2000" onchange="applyFilters()" min="0" step="100">
+      <input type="number" id="filterMaxPrice" placeholder="e.g. 2000" min="0" step="100">
     </div>
-    <div class="filter-group filter-actions">
-      <button class="clear-btn" onclick="clearFilters()">✕ Clear Filters</button>
+    <div class="filter-group filter-actions" style="gap:8px;">
+      <button class="search-btn" onclick="applyFilters()">🔍 Search</button>
+      <button class="clear-btn" onclick="clearFilters()">✕ Clear</button>
     </div>
   </div>
 </div>
 
 <!-- STATS -->
 <div class="stats-bar">
-  <div class="stat-item"><div class="stat-label">Total Cruises</div><div class="stat-value" id="statTotal">—</div></div>
+  <div class="stat-item"><div class="stat-label">Fetched Total</div><div class="stat-value" id="statFetched">—</div></div>
+  <div class="stat-item"><div class="stat-label">Showing</div><div class="stat-value" id="statTotal">—</div></div>
   <div class="stat-item"><div class="stat-label">Lowest Price</div><div class="stat-value green" id="statMin">—</div></div>
   <div class="stat-item"><div class="stat-label">Highest Price</div><div class="stat-value red" id="statMax">—</div></div>
   <div class="stat-item"><div class="stat-label">Avg Price</div><div class="stat-value" id="statAvg">—</div></div>
@@ -439,11 +448,22 @@ window.onload = () => { loadCruises(); };
 async function loadCruises() {
   showSkeletons();
   try {
-    const res = await fetch(`${API}/cruises?sort=${activeSort}`);
-    const data = await res.json();
+    // Fetch cruises and stats in parallel
+    const [cruiseRes, statsRes] = await Promise.all([
+      fetch(`${API}/cruises?sort=${activeSort}`),
+      fetch(`${API}/stats`)
+    ]);
+    const data = await cruiseRes.json();
+    const statsData = await statsRes.json().catch(() => null);
+
     if (data.status === 'success') {
       allCruises = data.data || [];
       updateScrapedTimes(data.last_scraped);
+      // Raw total from stats (includes cruises filtered out due to no price)
+      if (statsData?.data) {
+        const rawTotal = statsData.data.reduce((sum, s) => sum + (s.total_cruises || 0), 0);
+        document.getElementById('statFetched').textContent = rawTotal;
+      }
       populateFilters();
       applyFilters();
     } else {
@@ -474,23 +494,45 @@ function updateScrapedTimes(last_scraped) {
 }
 
 // ─── PORT PARSING ────────────────────────────────────────────
-// Ports arrive as either a plain string "Miami" or a JSON-like
-// object string "{'name': 'Fort Lauderdale, Florida', 'code': 'FLL'}"
+// Ports can be: plain "Miami", or Python dict "{'name': 'Fort Lauderdale, Florida', 'code': 'FLL'}"
+// Also handles plain IATA codes like "JAX", "SJU"
+const PORT_NAMES = {
+  JAX:'Jacksonville', MIA:'Miami', FLL:'Fort Lauderdale', LAX:'Los Angeles',
+  SFO:'San Francisco', SEA:'Seattle', SJU:'San Juan', BNE:'Brisbane',
+  SYD:'Sydney', YOK:'Yokohama', GLS:'Galveston', PCV:'Puerto Chiapas',
+  ROM:'Rome (Civitavecchia)', BCN:'Barcelona', LIS:'Lisbon', NYC:'New York',
+  NOL:'New Orleans', HNL:'Honolulu', ANC:'Anchorage', VAN:'Vancouver',
+};
+
 function parsePort(raw) {
-  if (!raw) return null;
+  if (!raw || raw === 'None' || raw === 'null') return null;
   const s = String(raw).trim();
-  // Try to extract name and code from dict-like string
-  const nameMatch = s.match(/['"]?name['"]?\s*:\s*['"]([^'"]+)['"]/);
-  const codeMatch = s.match(/['"]?code['"]?\s*:\s*['"]([^'"]+)['"]/);
-  if (nameMatch) {
-    const name = nameMatch[1].trim();
-    const code = codeMatch ? codeMatch[1].trim() : null;
-    // Shorten long names: "Fort Lauderdale, Florida" → "Fort Lauderdale"
-    const shortName = name.split(',')[0].trim();
-    return { display: code ? `${shortName} (${code})` : shortName, code: code || shortName, name: shortName };
+  if (!s) return null;
+
+  // Dict-style: {'name': 'Fort Lauderdale, Florida', 'code': 'FLL'}
+  const nameMatch = s.match(/name['":\s]+([^,'"}\]]+)/i);
+  const codeMatch = s.match(/code['":\s]+([A-Z]{2,4})/i);
+  if (nameMatch || codeMatch) {
+    const rawName = (nameMatch?.[1] || '').trim().replace(/['"]/g,'');
+    const code = (codeMatch?.[1] || '').trim().toUpperCase();
+    // Use first part before comma ("Fort Lauderdale, Florida" → "Fort Lauderdale")
+    const shortName = rawName ? rawName.split(',')[0].trim() : (PORT_NAMES[code] || code);
+    const display = shortName && code && shortName !== code
+      ? `${shortName} (${code})`
+      : shortName || code;
+    return { display, code: code || shortName, name: shortName };
   }
-  // Plain string
-  return { display: s, code: s, name: s };
+
+  // Pure IATA code (2-4 uppercase letters)
+  if (/^[A-Z]{2,4}$/.test(s)) {
+    const name = PORT_NAMES[s] || s;
+    const display = PORT_NAMES[s] ? `${PORT_NAMES[s]} (${s})` : s;
+    return { display, code: s, name };
+  }
+
+  // Plain city name like "Miami" or "Fort Lauderdale, Florida"
+  const shortName = s.split(',')[0].trim();
+  return { display: shortName, code: shortName, name: shortName };
 }
 
 // ─── DESTINATION PARSING ────────────────────────────────────
@@ -522,8 +564,9 @@ function populateFilters() {
   for (const c of allCruises) {
     const dep = parsePort(c.departurePort);
     const arr = parsePort(c.arrivalPort);
+    // Add ALL ports to both maps regardless — user might want to filter by either
     if (dep) depMap.set(dep.code, dep.display);
-    if (arr && arr.code !== dep?.code) arrMap.set(arr.code, arr.display);
+    if (arr) arrMap.set(arr.code, arr.display);  // ← was wrongly excluding same-as-dep ports
     const d = parseDest(c.destination);
     if (d) dests.add(d);
   }
@@ -685,7 +728,18 @@ function cardHTML(c) {
   const depName = dep?.name?.toLowerCase() || '';
   const showDest = dest && !depName.includes(dest.toLowerCase()) && dest.length > 2;
 
-  // Price grid — exclude best_price cabin type to avoid duplication
+  // Helper: render one price cell's amount(s) based on display currency
+  function priceCell(raw, fromCurrency) {
+    if (!raw) return '';
+    const p = parseFloat(raw); if (!p) return '';
+    const usd = fromCurrency === 'EUR' ? p * EUR_USD : p;
+    const eur = fromCurrency === 'USD' ? p * USD_EUR : p;
+    if (displayCurrency === 'USD')  return `<div class="price-usd">$${Math.round(usd).toLocaleString()}</div>`;
+    if (displayCurrency === 'EUR')  return `<div class="price-usd" style="color:var(--eur)">€${Math.round(eur).toLocaleString()}</div>`;
+    // BOTH — show USD primary, EUR secondary, NO duplication
+    return `<div class="price-usd">$${Math.round(usd).toLocaleString()}</div><div class="price-eur">€${Math.round(eur).toLocaleString()}</div>`;
+  }
+
   const priceTypes = [
     { key: 'interior_price', label: 'Interior' },
     { key: 'oceanview_price', label: 'Ocean View' },
@@ -694,47 +748,42 @@ function cardHTML(c) {
     { key: 'suite_price', label: 'Suite' },
   ];
 
-  // Find which cabin type IS the best price so we can highlight it instead of duplicating
-  let bestKey = null;
-  let bestVal = Infinity;
+  // Find cheapest cabin to highlight
+  let bestKey = null, bestVal = Infinity;
   for (const pt of priceTypes) {
     const v = parseFloat(c[pt.key]);
     if (v > 0 && v < bestVal) { bestVal = v; bestKey = pt.key; }
   }
 
   const priceHTML = priceTypes.map(pt => {
-    const raw = c[pt.key];
-    if (!raw) return '';
-    const prices = convertPrice(raw, c.currency);
-    if (!prices) return '';
+    const cell = priceCell(c[pt.key], c.currency);
+    if (!cell) return '';
     const isBest = pt.key === bestKey;
     return `<div class="price-item${isBest ? ' price-item-best' : ''}">
       <div class="price-label">${pt.label}${isBest ? ' ★' : ''}</div>
-      ${displayCurrency === 'USD' ? `<div class="price-usd">$${Math.round(prices.usd).toLocaleString()}</div>` : ''}
-      ${displayCurrency === 'EUR' ? `<div class="price-usd" style="color:var(--eur)">€${Math.round(prices.eur).toLocaleString()}</div>` : ''}
-      ${displayCurrency === 'BOTH' ? `<div class="price-usd">$${Math.round(prices.usd).toLocaleString()}</div><div class="price-eur">€${Math.round(prices.eur).toLocaleString()}</div>` : ''}
+      ${cell}
     </div>`;
   }).filter(Boolean).join('');
 
-  // Best price summary row — only show if we have it, and it's the from-price callout
-  const bestPrices = convertPrice(c.best_price, c.currency);
-  const bestPriceHTML = bestPrices ? `
-    <div class="best-price-row">
-      <div class="best-price-label">From</div>
+  // "From" row — single clean price, no duplication
+  const bestRaw = parseFloat(c.best_price);
+  const bestPriceHTML = bestRaw ? (() => {
+    const usd = c.currency === 'EUR' ? bestRaw * EUR_USD : bestRaw;
+    const eur = c.currency === 'USD' ? bestRaw * USD_EUR : bestRaw;
+    let mainPrice = '';
+    if (displayCurrency === 'USD')  mainPrice = `<div class="best-price-value">$${Math.round(usd).toLocaleString()}</div>`;
+    else if (displayCurrency === 'EUR') mainPrice = `<div class="best-price-value" style="color:var(--eur)">€${Math.round(eur).toLocaleString()}</div>`;
+    else mainPrice = `<div class="best-price-value">$${Math.round(usd).toLocaleString()}</div><div class="best-price-eur">€${Math.round(eur).toLocaleString()}</div>`;
+    return `<div class="best-price-row">
+      <div class="best-price-label">From (per person)</div>
       <div style="text-align:right">
-        ${displayCurrency === 'EUR'
-          ? `<div class="best-price-value" style="color:var(--eur)">€${Math.round(bestPrices.eur).toLocaleString()}</div>`
-          : `<div class="best-price-value">$${Math.round(bestPrices.usd).toLocaleString()}</div>`
-        }
-        ${displayCurrency === 'BOTH'
-          ? `<div class="best-price-value">$${Math.round(bestPrices.usd).toLocaleString()}</div><div class="best-price-eur">€${Math.round(bestPrices.eur).toLocaleString()}</div>`
-          : ''
-        }
+        ${mainPrice}
         <div style="font-size:10px;color:var(--muted);margin-top:2px;">
-          Native: ${c.currency === 'EUR' ? '€' : '$'}${Math.round(parseFloat(c.best_price)).toLocaleString()} ${c.currency}
+          Listed as ${c.currency === 'EUR' ? '€' : '$'}${Math.round(bestRaw).toLocaleString()} ${c.currency}
         </div>
       </div>
-    </div>` : '';
+    </div>`;
+  })() : '';
 
   // Format date
   function fmtDate(d) {
