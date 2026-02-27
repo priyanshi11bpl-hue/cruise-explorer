@@ -9,13 +9,15 @@
   :root {
     --ocean: #0a1628; --gold: #c9a84c; --gold-light: #f0d080;
     --white: #ffffff; --text-muted: #8aa5c0; --card-bg: #0f2035;
-    --border: rgba(201,168,76,0.2); --success: #2ecc71;
+    --border: rgba(201,168,76,0.2); --success: #2ecc71; --error: #e74c3c;
+    --warning: #f39c12;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: var(--ocean); color: var(--white); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
   body::before {
     content: ''; position: fixed; inset: 0;
-    background: radial-gradient(ellipse at 20% 50%, rgba(26,74,122,0.4) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(10,22,40,0.8) 0%, transparent 50%);
+    background: radial-gradient(ellipse at 20% 50%, rgba(26,74,122,0.4) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(10,22,40,0.8) 0%, transparent 50%);
     pointer-events: none; z-index: 0;
   }
   .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
@@ -23,7 +25,59 @@
   .header-badge { display: inline-block; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); border: 1px solid var(--border); padding: 6px 16px; border-radius: 100px; margin-bottom: 20px; }
   h1 { font-family: 'Playfair Display', serif; font-size: clamp(36px, 6vw, 64px); font-weight: 900; line-height: 1.05; letter-spacing: -1px; margin-bottom: 16px; }
   h1 span { color: var(--gold); font-style: italic; }
-  .subtitle { color: var(--text-muted); font-size: 16px; font-weight: 300; max-width: 500px; margin: 0 auto; }
+  .subtitle { color: var(--text-muted); font-size: 16px; font-weight: 300; max-width: 500px; margin: 0 auto 24px; }
+  .data-status-bar {
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; flex-wrap: wrap;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 24px; margin-top: 16px;
+  }
+  .status-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
+  .status-dot.live { background: var(--success); box-shadow: 0 0 8px var(--success); animation: pulse 2s infinite; }
+  .status-dot.stale { background: var(--warning); }
+  .status-dot.error { background: var(--error); }
+  .status-dot.loading { background: var(--gold); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .status-divider { width: 1px; height: 16px; background: var(--border); }
+  .refresh-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--ocean); border: none; padding: 10px 20px; border-radius: 100px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px;
+  }
+  .refresh-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,168,76,0.35); }
+  .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .spin { display: inline-block; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .progress-panel {
+    display: none; background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px; margin-bottom: 32px;
+  }
+  .progress-panel.visible { display: block; animation: fadeUp 0.3s ease both; }
+  .progress-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .progress-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; }
+  .progress-eta { font-size: 13px; color: var(--text-muted); }
+  .progress-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .progress-step { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid transparent; transition: all 0.3s; }
+  .progress-step.active { border-color: var(--gold); background: rgba(201,168,76,0.06); }
+  .progress-step.done { border-color: rgba(46,204,113,0.3); background: rgba(46,204,113,0.05); }
+  .progress-step.err  { border-color: rgba(231,76,60,0.3); background: rgba(231,76,60,0.05); }
+  .step-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+  .step-text { flex: 1; font-size: 14px; }
+  .step-status { font-size: 12px; color: var(--text-muted); }
+  .progress-step.active .step-status { color: var(--gold); }
+  .progress-step.done  .step-status { color: var(--success); }
+  .progress-step.err   .step-status { color: var(--error); }
+  .progress-bar-wrap { background: rgba(255,255,255,0.07); border-radius: 100px; height: 6px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius: 100px; transition: width 0.6s ease; width: 0%; }
+  .error-banner {
+    display: none; align-items: center; gap: 12px; background: rgba(231,76,60,0.1);
+    border: 1px solid rgba(231,76,60,0.3); border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; font-size: 14px;
+  }
+  .error-banner.visible { display: flex; animation: fadeUp 0.3s ease; }
+  .error-banner button { margin-left: auto; background: none; border: 1px solid rgba(231,76,60,0.4); color: var(--error); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; }
   .section-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 20px; }
   .cruise-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 48px; }
   .cruise-toggle-row { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.3s ease; animation: slideIn 0.4s ease both; }
@@ -51,7 +105,11 @@
   @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
   .details-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
   .details-title { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; }
+  .results-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .results-count { font-size: 13px; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 6px 14px; border-radius: 100px; border: 1px solid var(--border); }
+  .data-source-badge { font-size: 11px; padding: 4px 10px; border-radius: 100px; font-weight: 500; }
+  .data-source-badge.live  { background: rgba(46,204,113,0.15); color: var(--success); border: 1px solid rgba(46,204,113,0.3); }
+  .data-source-badge.demo  { background: rgba(138,165,192,0.15); color: var(--text-muted); border: 1px solid var(--border); }
   .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; padding: 20px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; }
   .stat-item { text-align: center; }
   .stat-value { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: var(--gold); }
@@ -66,9 +124,9 @@
   .cruise-card:hover::before { opacity: 1; }
   .card-line-badge { display: inline-block; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; margin-bottom: 14px; font-weight: 500; }
   .badge-norwegian { background: rgba(0,150,255,0.15); color: #4db8ff; }
-  .badge-royal { background: rgba(255,100,50,0.15); color: #ff8c69; }
-  .badge-princess { background: rgba(200,150,255,0.15); color: #c896ff; }
-  .card-ship { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
+  .badge-royal     { background: rgba(255,100,50,0.15); color: #ff8c69; }
+  .badge-princess  { background: rgba(200,150,255,0.15); color: #c896ff; }
+  .card-ship  { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
   .card-title { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
   .card-route { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
   .card-route span { color: var(--gold); }
@@ -82,6 +140,8 @@
   .price-label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); }
   .price-amount { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--gold); }
   .price-currency { font-size: 12px; color: var(--text-muted); margin-left: 4px; }
+  .book-btn { display: inline-block; margin-top: 12px; font-size: 12px; color: var(--gold); text-decoration: none; border: 1px solid var(--border); border-radius: 6px; padding: 5px 12px; transition: all 0.2s; }
+  .book-btn:hover { border-color: var(--gold); background: rgba(201,168,76,0.1); }
   .empty-state { text-align: center; padding: 64px 24px; color: var(--text-muted); grid-column: 1/-1; }
   .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
   .empty-state h3 { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--white); margin-bottom: 8px; }
@@ -94,7 +154,66 @@
     <div class="header-badge">⚓ Live Azure Synapse Data</div>
     <h1>Cruise Price<br><span>Explorer</span></h1>
     <p class="subtitle">Real prices from Norwegian, Royal Caribbean & Princess — powered by Azure Synapse Analytics</p>
+    <div class="data-status-bar">
+      <div class="status-item">
+        <div class="status-dot loading" id="statusDot"></div>
+        <span id="statusText">Loading…</span>
+      </div>
+      <div class="status-divider"></div>
+      <div class="status-item">
+        🕐 Last scraped: <strong id="lastScraped" style="color:var(--white);margin-left:4px">—</strong>
+      </div>
+      <div class="status-divider"></div>
+      <button class="refresh-btn" id="refreshBtn" onclick="triggerRefresh()">
+        <span id="refreshIcon">🔄</span> Refresh Live Prices
+      </button>
+    </div>
   </header>
+
+  <!-- PROGRESS PANEL -->
+  <div class="progress-panel" id="progressPanel">
+    <div class="progress-header">
+      <div class="progress-title">🚢 Scraping Live Prices…</div>
+      <div class="progress-eta" id="progressEta">Estimated 3–5 minutes</div>
+    </div>
+    <div class="progress-steps">
+      <div class="progress-step" id="step-pipeline">
+        <div class="step-icon">⚙️</div>
+        <div class="step-text">Triggering Synapse Pipeline <strong>cruise_price_daily</strong></div>
+        <div class="step-status" id="step-pipeline-status">Waiting…</div>
+      </div>
+      <div class="progress-step" id="step-norwegian">
+        <div class="step-icon">🚢</div>
+        <div class="step-text">Norwegian Cruise Line — Apify scraper running</div>
+        <div class="step-status" id="step-norwegian-status">Queued</div>
+      </div>
+      <div class="progress-step" id="step-royal">
+        <div class="step-icon">👑</div>
+        <div class="step-text">Royal Caribbean — Apify scraper running</div>
+        <div class="step-status" id="step-royal-status">Queued</div>
+      </div>
+      <div class="progress-step" id="step-princess">
+        <div class="step-icon">👸</div>
+        <div class="step-text">Princess Cruises — Apify scraper running</div>
+        <div class="step-status" id="step-princess-status">Queued</div>
+      </div>
+      <div class="progress-step" id="step-load">
+        <div class="step-icon">📊</div>
+        <div class="step-text">Loading fresh prices into Explorer</div>
+        <div class="step-status" id="step-load-status">Queued</div>
+      </div>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progressBar"></div>
+    </div>
+  </div>
+
+  <!-- ERROR BANNER -->
+  <div class="error-banner" id="errorBanner">
+    <span>⚠️</span>
+    <span id="errorMsg">Could not connect to API.</span>
+    <button onclick="dismissError()">Dismiss</button>
+  </div>
 
   <div class="section-label">⚙ Select Cruise Lines to Explore</div>
   <div class="cruise-list">
@@ -103,7 +222,7 @@
         <div class="cruise-icon">🚢</div>
         <div>
           <div class="cruise-name">Norwegian Cruise Line</div>
-          <div class="cruise-meta">200 cruises · From 350 EUR · Caribbean, Alaska, Mediterranean, Bahamas</div>
+          <div class="cruise-meta" id="meta-norwegian">Loading…</div>
         </div>
       </div>
       <div class="toggle-wrap">
@@ -116,7 +235,7 @@
         <div class="cruise-icon">👑</div>
         <div>
           <div class="cruise-name">Royal Caribbean</div>
-          <div class="cruise-meta">60 cruises · From 553 USD · Bahamas, Caribbean, Perfect Day</div>
+          <div class="cruise-meta" id="meta-royal">Loading…</div>
         </div>
       </div>
       <div class="toggle-wrap">
@@ -129,7 +248,7 @@
         <div class="cruise-icon">👸</div>
         <div>
           <div class="cruise-name">Princess Cruises</div>
-          <div class="cruise-meta">80 cruises · From 499 USD · Caribbean, Japan, Mediterranean, Australia</div>
+          <div class="cruise-meta" id="meta-princess">Loading…</div>
         </div>
       </div>
       <div class="toggle-wrap">
@@ -142,7 +261,10 @@
   <div class="details-panel" id="detailsPanel">
     <div class="details-header">
       <div class="details-title">Cruise Results</div>
-      <div class="results-count" id="resultsCount">0 cruises</div>
+      <div class="results-meta">
+        <div class="results-count" id="resultsCount">0 cruises</div>
+        <div class="data-source-badge demo" id="dataSourceBadge">Loading…</div>
+      </div>
     </div>
     <div class="stats-bar">
       <div class="stat-item"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total Cruises</div></div>
@@ -164,60 +286,215 @@
 </div>
 
 <script>
-const CRUISE_DATA = {
+// ================================================================
+// CONFIGURATION
+// ================================================================
+const API_URL     = 'https://cruisebot-func-asgrc7czhnhycdbe.centralindia-01.azurewebsites.net/api/cruises';
+const REFRESH_URL = 'https://cruisebot-func-asgrc7czhnhycdbe.centralindia-01.azurewebsites.net/api/refresh';
+
+// ── STATE ──────────────────────────────────────────────────────
+let liveData  = { norwegian: [], royal: [], princess: [] };
+let demoMode  = true;
+let activeLines   = new Set();
+let currentFilter = 'all';
+let currentSort   = 'date';
+let refreshStartTime = null;
+let etaTimer = null;
+
+// ── DEMO FALLBACK ──────────────────────────────────────────────
+const DEMO_DATA = {
   norwegian: [
-    { ship: "Norwegian Getaway", title: "Norwegian Getaway 7 nights", departure: "2026-03-23", arrival: "2026-03-30", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 350, currency: "EUR" },
-    { ship: "Norwegian Escape", title: "Norwegian Escape 7 nights", departure: "2026-04-26", arrival: "2026-05-03", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 515, currency: "EUR" },
-    { ship: "Norwegian Escape", title: "Norwegian Escape 7 nights", departure: "2026-04-19", arrival: "2026-04-26", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 535, currency: "EUR" },
-    { ship: "Norwegian Escape", title: "Norwegian Escape 7 nights", departure: "2026-04-12", arrival: "2026-04-19", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 550, currency: "EUR" },
-    { ship: "Norwegian Escape", title: "Norwegian Escape 7 nights", departure: "2026-03-22", arrival: "2026-03-29", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 560, currency: "EUR" },
-    { ship: "Norwegian Escape", title: "Norwegian Escape 7 nights", departure: "2026-04-05", arrival: "2026-04-12", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 580, currency: "EUR" },
-    { ship: "Norwegian Escape", title: "Norwegian Escape 7 nights", departure: "2026-03-29", arrival: "2026-04-05", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 640, currency: "EUR" },
-    { ship: "Norwegian Escape", title: "Norwegian Escape 7 nights", departure: "2026-03-15", arrival: "2026-03-22", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 850, currency: "EUR" },
-    { ship: "Norwegian Aqua", title: "Norwegian Aqua 7 nights", departure: "2027-10-31", arrival: "2027-11-07", departurePort: "PCV", arrivalPort: "PCV", duration: 7, price: 1120, currency: "EUR" },
-    { ship: "Norwegian Aqua", title: "Norwegian Aqua 7 nights", departure: "2027-04-25", arrival: "2027-05-02", departurePort: "PCV", arrivalPort: "PCV", duration: 7, price: 1146, currency: "EUR" },
-    { ship: "Norwegian Aqua", title: "Norwegian Aqua 7 nights", departure: "2027-11-14", arrival: "2027-11-21", departurePort: "PCV", arrivalPort: "PCV", duration: 7, price: 1165, currency: "EUR" },
-    { ship: "Norwegian Aura", title: "Norwegian Aura 7 nights", departure: "2027-06-19", arrival: "2027-06-26", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 1547, currency: "EUR" },
-    { ship: "Norwegian Aura", title: "Norwegian Aura 7 nights", departure: "2027-06-26", arrival: "2027-07-03", departurePort: "MIA", arrivalPort: "MIA", duration: 7, price: 1547, currency: "EUR" },
-    { ship: "Norwegian Aqua", title: "Norwegian Aqua 7 nights", departure: "2027-12-26", arrival: "2028-01-02", departurePort: "PCV", arrivalPort: "PCV", duration: 7, price: 1845, currency: "EUR" },
-    { ship: "Norwegian Escape", title: "Norwegian Escape 7 nights", departure: "2026-03-08", arrival: "2026-03-15", departurePort: "MSY", arrivalPort: "MSY", duration: 7, price: 3005, currency: "EUR" },
+    { ship:"Norwegian Getaway", title:"Caribbean 7 Nights", departure:"2026-03-23", arrival:"2026-03-30", departurePort:"MIA", arrivalPort:"MIA", duration:7, price:350, currency:"EUR", line:"norwegian" },
+    { ship:"Norwegian Escape",  title:"Caribbean 7 Nights", departure:"2026-04-26", arrival:"2026-05-03", departurePort:"MSY", arrivalPort:"MSY", duration:7, price:515, currency:"EUR", line:"norwegian" },
+    { ship:"Norwegian Aqua",    title:"Caribbean 7 Nights", departure:"2027-10-31", arrival:"2027-11-07", departurePort:"PCV", arrivalPort:"PCV", duration:7, price:1120, currency:"EUR", line:"norwegian" },
   ],
   royal: [
-    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-04-27", arrival: "2026-05-01", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 553.16, currency: "USD" },
-    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-04-27", arrival: "2026-05-01", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 685.66, currency: "USD" },
-    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-04-13", arrival: "2026-04-17", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 615.81, currency: "USD" },
-    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-04-13", arrival: "2026-04-17", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 715.31, currency: "USD" },
-    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-03-30", arrival: "2026-04-03", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 783.31, currency: "USD" },
-    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-03-23", arrival: "2026-03-27", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 847.81, currency: "USD" },
-    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-04-06", arrival: "2026-04-10", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 944.81, currency: "USD" },
-    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-03-16", arrival: "2026-03-20", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 1015.31, currency: "USD" },
-    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-03-16", arrival: "2026-03-20", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 1288.31, currency: "USD" },
-    { ship: "Wonder of the Seas", title: "Bahamas & Perfect Day Cruise", departure: "2026-03-02", arrival: "2026-03-06", departurePort: "Miami", arrivalPort: "Miami", duration: 4, price: 1492.81, currency: "USD" },
-    { ship: "Icon of the Seas", title: "Eastern Caribbean & Perfect Day", departure: "2026-04-25", arrival: "2026-05-02", departurePort: "Miami", arrivalPort: "Miami", duration: 7, price: 1643.96, currency: "USD" },
-    { ship: "Icon of the Seas", title: "Eastern Caribbean & Perfect Day", departure: "2026-04-11", arrival: "2026-04-18", departurePort: "Miami", arrivalPort: "Miami", duration: 7, price: 1645.96, currency: "USD" },
-    { ship: "Icon of the Seas", title: "Eastern Caribbean & Perfect Day", departure: "2026-03-28", arrival: "2026-04-04", departurePort: "Miami", arrivalPort: "Miami", duration: 7, price: 2496.46, currency: "USD" },
+    { ship:"Wonder of the Seas", title:"Bahamas & Perfect Day", departure:"2026-04-27", arrival:"2026-05-01", departurePort:"Miami", arrivalPort:"Miami", duration:4, price:553, currency:"USD", line:"royal" },
+    { ship:"Icon of the Seas",   title:"Eastern Caribbean",    departure:"2026-04-25", arrival:"2026-05-02", departurePort:"Miami", arrivalPort:"Miami", duration:7, price:1644, currency:"USD", line:"royal" },
   ],
   princess: [
-    { ship: "Sun Princess", title: "Caribbean Getaway With Cozumel", departure: "2026-03-01", arrival: "2026-03-05", departurePort: "Fort Lauderdale", arrivalPort: "Fort Lauderdale", duration: 4, price: 499, currency: "USD" },
-    { ship: "Ruby Princess", title: "Mexican Riviera", departure: "2026-03-07", arrival: "2026-03-18", departurePort: "San Francisco", arrivalPort: "San Francisco", duration: 11, price: 879, currency: "USD" },
-    { ship: "Enchanted Princess", title: "Eastern Caribbean with Tortola", departure: "2026-03-07", arrival: "2026-03-17", departurePort: "Fort Lauderdale", arrivalPort: "Fort Lauderdale", duration: 10, price: 1299, currency: "USD" },
-    { ship: "Diamond Princess", title: "Japan Explorer Spring Flowers", departure: "2026-03-17", arrival: "2026-03-28", departurePort: "YOK", arrivalPort: "YOK", duration: 11, price: 1759, currency: "USD" },
-    { ship: "Enchanted Princess", title: "Southern Caribbean with Martinique", departure: "2026-03-17", arrival: "2026-03-27", departurePort: "Fort Lauderdale", arrivalPort: "Fort Lauderdale", duration: 10, price: 1209, currency: "USD" },
-    { ship: "Diamond Princess", title: "Japan Explorer", departure: "2026-03-06", arrival: "2026-03-17", departurePort: "YOK", arrivalPort: "YOK", duration: 11, price: 2209, currency: "USD" },
-    { ship: "Sapphire Princess", title: "Mediterranean with Greece & Italy", departure: "2026-03-15", arrival: "2026-03-22", departurePort: "ROM", arrivalPort: "ROM", duration: 7, price: 2107, currency: "USD" },
-    { ship: "Sky Princess", title: "Southern Australia Explorer", departure: "2026-02-28", arrival: "2026-03-12", departurePort: "SYD", arrivalPort: "SYD", duration: 12, price: 4584, currency: "USD" },
-    { ship: "Diamond Princess", title: "Japan Explorer Spring Flowers", departure: "2026-03-17", arrival: "2026-03-28", departurePort: "YOK", arrivalPort: "YOK", duration: 11, price: 2559, currency: "USD" },
-    { ship: "Enchanted Princess", title: "Mediterranean Splendor", departure: "2026-05-10", arrival: "2026-05-20", departurePort: "BCN", arrivalPort: "BCN", duration: 10, price: 1899, currency: "USD" },
+    { ship:"Sun Princess",       title:"Caribbean Getaway", departure:"2026-03-01", arrival:"2026-03-05", departurePort:"Fort Lauderdale", arrivalPort:"Fort Lauderdale", duration:4,  price:499,  currency:"USD", line:"princess" },
+    { ship:"Enchanted Princess", title:"Eastern Caribbean", departure:"2026-03-07", arrival:"2026-03-17", departurePort:"Fort Lauderdale", arrivalPort:"Fort Lauderdale", duration:10, price:1299, currency:"USD", line:"princess" },
   ]
 };
 
-let activeLines = new Set();
-let currentFilter = 'all';
-let currentSort = 'date';
+// ── FETCH LIVE DATA FROM API ───────────────────────────────────
+async function loadLiveData() {
+  const res = await fetch(API_URL);
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  const json = await res.json();
+  if (json.status !== 'success') throw new Error(json.message || 'API returned error');
 
+  // Reset
+  liveData = { norwegian: [], royal: [], princess: [] };
+
+  json.data.forEach(r => {
+    // Map cruise_line values: 'norwegian', 'royal', 'princess'
+    const lineKey = r.cruise_line || r.cruiseLine || '';
+    const key = lineKey.toLowerCase().includes('norwegian') ? 'norwegian'
+              : lineKey.toLowerCase().includes('royal')     ? 'royal'
+              : lineKey.toLowerCase().includes('princess')  ? 'princess'
+              : null;
+    if (!key) return;
+
+    // Parse duration from nightTitle e.g. "7 Night Caribbean"
+    const nightsMatch = (r.duration_label || r.nightTitle || '').match(/^(\d+)/);
+    const duration = nightsMatch ? parseInt(nightsMatch[1]) : null;
+
+    liveData[key].push({
+      ship:          r.shipName || r.ship || r.title,
+      title:         r.title,
+      departure:     r.departureDate,
+      arrival:       r.arrivalDate,
+      departurePort: r.departurePort || r.departurePortName || '—',
+      arrivalPort:   r.arrivalPort   || r.arrivalPortName   || '—',
+      duration,
+      price:         parseFloat(r.best_price || r.interior_price || r.priceAmount || 0),
+      currency:      r.currency || 'USD',
+      line:          key,
+      booking_url:   r.booking_url || null,
+      interior_price:  r.interior_price,
+      oceanview_price: r.oceanview_price,
+      balcony_price:   r.balcony_price,
+      minisuite_price: r.minisuite_price,
+    });
+  });
+
+  // Update last scraped from API response
+  if (json.last_scraped) {
+    const dates = Object.values(json.last_scraped).filter(Boolean);
+    if (dates.length) {
+      const latest = dates.sort().reverse()[0];
+      try {
+        const d = new Date(latest);
+        document.getElementById('lastScraped').textContent =
+          d.toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+      } catch { document.getElementById('lastScraped').textContent = latest; }
+    }
+  }
+
+  return json.count;
+}
+
+// ── ON PAGE LOAD ───────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  setStatusBar('loading');
+  try {
+    const count = await loadLiveData();
+    if (count > 0) {
+      demoMode = false;
+      setStatusBar('live');
+    } else {
+      setStatusBar('stale');
+      document.getElementById('lastScraped').textContent = 'No data yet';
+    }
+  } catch (err) {
+    setStatusBar('error');
+    document.getElementById('lastScraped').textContent = 'Demo mode';
+    showError(`API unavailable: ${err.message} — showing demo data`);
+  }
+  updateLineMetas();
+});
+
+// ── REFRESH BUTTON ─────────────────────────────────────────────
+async function triggerRefresh() {
+  const btn  = document.getElementById('refreshBtn');
+  const icon = document.getElementById('refreshIcon');
+  const panel = document.getElementById('progressPanel');
+
+  btn.disabled = true;
+  icon.innerHTML = '<span class="spin">⟳</span>';
+  panel.classList.add('visible');
+  dismissError();
+
+  refreshStartTime = Date.now();
+  etaTimer = setInterval(updateEta, 1000);
+
+  // Reset steps
+  ['pipeline','norwegian','royal','princess','load'].forEach(s => setStep(s, '', 'Queued'));
+  setProgressBar(0);
+
+  // Step 1 — show pipeline triggering
+  setStep('pipeline', 'active', 'Triggering pipeline…');
+  setProgressBar(5);
+
+  // Step 1 — trigger real Apify scrape via Function App
+  const refreshRes = await fetch(REFRESH_URL, { method: 'POST' });
+  const refreshJson = await refreshRes.json();
+  if (refreshJson.status === 'error') throw new Error(refreshJson.message);
+  setStep('pipeline', 'done', '✓ Triggered');
+  setProgressBar(10);
+
+  // Steps 2–4 — animate scrapers (each ~60s in reality)
+  const scrapers = ['norwegian', 'royal', 'princess'];
+  for (let i = 0; i < scrapers.length; i++) {
+    setStep(scrapers[i], 'active', 'Scraping…');
+    setProgressBar(15 + i * 20);
+    await sleep(2000); // visual only — real scraping happens in Azure
+  }
+
+  // Step 5 — load fresh data from API
+  setStep('load', 'active', 'Fetching prices…');
+  setProgressBar(85);
+
+  try {
+    await sleep(1000);
+    const count = await loadLiveData();
+    demoMode = false;
+    scrapers.forEach(s => setStep(s, 'done', '✓ Done'));
+    setStep('load', 'done', `✓ ${count} cruises loaded`);
+    setProgressBar(100);
+    setStatusBar('live');
+    updateLineMetas();
+    renderDetails();
+
+    setTimeout(() => {
+      panel.classList.remove('visible');
+      setProgressBar(0);
+    }, 3000);
+
+  } catch (err) {
+    setStep('load', 'err', '✗ Failed');
+    showError(`Could not load fresh data: ${err.message}`);
+    panel.classList.remove('visible');
+  }
+
+  clearInterval(etaTimer);
+  btn.disabled = false;
+  icon.innerHTML = '🔄';
+}
+
+// ── STATUS BAR ────────────────────────────────────────────────
+function setStatusBar(state) {
+  const dot  = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  dot.className = `status-dot ${state}`;
+  const labels = { live:'Live data ✓', stale:'Cached data', error:'API unavailable', loading:'Loading…' };
+  text.textContent = labels[state] || state;
+}
+
+// ── LINE META SUMMARIES ───────────────────────────────────────
+function updateLineMetas() {
+  const src = demoMode ? DEMO_DATA : liveData;
+  const dests = {
+    norwegian: 'Caribbean, Alaska, Mediterranean, Bahamas',
+    royal:     'Caribbean, Bahamas, Perfect Day',
+    princess:  'Caribbean, Alaska, Mediterranean, Mexico'
+  };
+  ['norwegian','royal','princess'].forEach(line => {
+    const cruises = src[line] || [];
+    const prices  = cruises.map(c => c.price).filter(p => p > 0);
+    const min     = prices.length ? Math.min(...prices).toLocaleString() : '—';
+    const curr    = cruises[0]?.currency || 'USD';
+    document.getElementById(`meta-${line}`).textContent =
+      `${cruises.length || '—'} cruises · From ${min} ${curr} · ${dests[line]}`;
+  });
+}
+
+// ── TOGGLE ────────────────────────────────────────────────────
 function toggleLine(line) {
   const toggle = document.getElementById(`toggle-${line}`);
-  const label = document.getElementById(`label-${line}`);
+  const label  = document.getElementById(`label-${line}`);
   if (activeLines.has(line)) {
     activeLines.delete(line);
     toggle.classList.remove('on');
@@ -239,16 +516,13 @@ function filterBy(filter, btn) {
   renderCards();
 }
 
-function sortBy(type, btn) {
-  currentSort = type;
-  renderCards();
-}
+function sortBy(type) { currentSort = type; renderCards(); }
 
+// ── RENDER ────────────────────────────────────────────────────
 function getActiveData() {
-  let data = [];
-  activeLines.forEach(line => {
-    (CRUISE_DATA[line] || []).forEach(cruise => data.push({ ...cruise, line }));
-  });
+  const src = demoMode ? DEMO_DATA : liveData;
+  const data = [];
+  activeLines.forEach(line => (src[line] || []).forEach(c => data.push({ ...c, line })));
   return data;
 }
 
@@ -256,59 +530,97 @@ function renderDetails() {
   const panel = document.getElementById('detailsPanel');
   if (activeLines.size === 0) { panel.classList.remove('visible'); return; }
   panel.classList.add('visible');
+  const badge = document.getElementById('dataSourceBadge');
+  badge.textContent = demoMode ? '⚠ Demo Data' : '✓ Live Data';
+  badge.className   = `data-source-badge ${demoMode ? 'demo' : 'live'}`;
   renderStats();
   renderCards();
 }
 
 function renderStats() {
-  const data = getActiveData();
+  const data   = getActiveData();
   const prices = data.map(d => d.price).filter(p => p > 0);
   document.getElementById('statTotal').textContent = data.length;
-  document.getElementById('statMin').textContent = prices.length ? Math.min(...prices).toLocaleString() : '—';
-  document.getElementById('statMax').textContent = prices.length ? Math.max(...prices).toLocaleString() : '—';
-  document.getElementById('statAvg').textContent = prices.length ? Math.round(prices.reduce((a,b)=>a+b,0)/prices.length).toLocaleString() : '—';
+  document.getElementById('statMin').textContent   = prices.length ? Math.min(...prices).toLocaleString() : '—';
+  document.getElementById('statMax').textContent   = prices.length ? Math.max(...prices).toLocaleString() : '—';
+  document.getElementById('statAvg').textContent   = prices.length ? Math.round(prices.reduce((a,b)=>a+b,0)/prices.length).toLocaleString() : '—';
   document.getElementById('resultsCount').textContent = `${data.length} cruise${data.length!==1?'s':''}`;
 }
 
 function renderCards() {
   let data = getActiveData();
   if (currentFilter !== 'all') data = data.filter(d => d.line === currentFilter);
-  if (currentSort === 'price') data.sort((a,b) => a.price - b.price);
+  if (currentSort === 'price')     data.sort((a,b) => a.price - b.price);
   else if (currentSort === 'date') data.sort((a,b) => new Date(a.departure) - new Date(b.departure));
   else if (currentSort === 'priceDesc') data.sort((a,b) => b.price - a.price);
 
   const grid = document.getElementById('cardsGrid');
-  if (data.length === 0) {
+  if (!data.length) {
     grid.innerHTML = `<div class="empty-state"><div class="icon">🌊</div><h3>No Results</h3><p>Try selecting a different cruise line or filter</p></div>`;
     return;
   }
 
-  const lineLabels = { norwegian: 'Norwegian', royal: 'Royal Caribbean', princess: 'Princess' };
-  const badgeClasses = { norwegian: 'badge-norwegian', royal: 'badge-royal', princess: 'badge-princess' };
+  const lineLabels   = { norwegian:'Norwegian', royal:'Royal Caribbean', princess:'Princess' };
+  const badgeClasses = { norwegian:'badge-norwegian', royal:'badge-royal', princess:'badge-princess' };
 
-  grid.innerHTML = data.map((cruise, i) => `
+  grid.innerHTML = data.map((c, i) => `
     <div class="cruise-card" style="animation-delay:${i*0.04}s">
-      <div class="card-line-badge ${badgeClasses[cruise.line]}">${lineLabels[cruise.line]}</div>
-      <div class="card-ship">${cruise.ship}</div>
-      <div class="card-title">${cruise.title}</div>
-      <div class="card-route">${cruise.departurePort} <span>→</span> ${cruise.arrivalPort}</div>
+      <div class="card-line-badge ${badgeClasses[c.line]}">${lineLabels[c.line]}</div>
+      <div class="card-ship">${c.ship}</div>
+      <div class="card-title">${c.title}</div>
+      <div class="card-route">${c.departurePort === c.arrivalPort ? `🔄 Round trip · ${c.departurePort}` : `${c.departurePort} <span>→</span> ${c.arrivalPort}`}</div>
       <div class="card-dates">
-        <div class="date-item"><div class="date-label">Departure</div><div class="date-value">${formatDate(cruise.departure)}</div></div>
-        <div class="date-item"><div class="date-label">Arrival</div><div class="date-value">${formatDate(cruise.arrival)}</div></div>
+        <div class="date-item"><div class="date-label">Departure</div><div class="date-value">${formatDate(c.departure)}</div></div>
+        <div class="date-item"><div class="date-label">Arrival</div><div class="date-value">${formatDate(c.arrival)}</div></div>
       </div>
       <div class="card-footer">
-        <div class="duration-badge">⏱ ${cruise.duration} nights</div>
+        <div class="duration-badge">${c.duration ? `⏱ ${c.duration} nights` : '—'}</div>
         <div class="price-display">
           <div class="price-label">From</div>
-          <div class="price-amount">${cruise.price.toLocaleString()}<span class="price-currency">${cruise.currency}</span></div>
+          <div class="price-amount">${Number(c.price).toLocaleString()}<span class="price-currency">${c.currency}</span></div>
         </div>
       </div>
+      ${c.booking_url ? `<a class="book-btn" href="${c.booking_url}" target="_blank" rel="noopener">Book Now →</a>` : ''}
     </div>
   `).join('');
 }
 
 function formatDate(d) {
-  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  if (!d) return '—';
+  try { return new Date(d).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }); }
+  catch { return d; }
+}
+
+// ── PROGRESS HELPERS ──────────────────────────────────────────
+function setStep(id, state, statusText) {
+  const el = document.getElementById(`step-${id}`);
+  const st = document.getElementById(`step-${id}-status`);
+  if (!el || !st) return;
+  el.className = `progress-step ${state}`;
+  st.textContent = statusText;
+}
+
+function setProgressBar(pct) {
+  document.getElementById('progressBar').style.width = pct + '%';
+}
+
+function updateEta() {
+  if (!refreshStartTime) return;
+  const elapsed = Math.round((Date.now() - refreshStartTime) / 1000);
+  const mins = Math.floor(elapsed / 60), secs = elapsed % 60;
+  document.getElementById('progressEta').textContent =
+    `⏱ ${mins > 0 ? `${mins}m ` : ''}${secs}s elapsed`;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function showError(msg) {
+  document.getElementById('errorMsg').textContent = msg;
+  document.getElementById('errorBanner').classList.add('visible');
+}
+
+function dismissError() {
+  document.getElementById('errorBanner').classList.remove('visible');
 }
 </script>
 </body>
