@@ -7,10 +7,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ocean: #0a1628; --gold: #c9a84c; --gold-light: #f0d080;
-    --white: #ffffff; --text-muted: #8aa5c0; --card-bg: #0f2035;
-    --border: rgba(201,168,76,0.2); --success: #2ecc71; --error: #e74c3c;
-    --warning: #f39c12;
+    --ocean:      #0a1628;
+    --deep:       #0d2240;
+    --gold:       #c9a84c;
+    --gold-light: #f0d080;
+    --white:      #ffffff;
+    --text-muted: #8aa5c0;
+    --card-bg:    #0f2035;
+    --border:     rgba(201,168,76,0.2);
+    --success:    #2ecc71;
+    --live-red:   #ff4444;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: var(--ocean); color: var(--white); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
@@ -21,63 +27,87 @@
     pointer-events: none; z-index: 0;
   }
   .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* ── HEADER ── */
   header { padding: 48px 0 32px; text-align: center; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
   .header-badge { display: inline-block; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); border: 1px solid var(--border); padding: 6px 16px; border-radius: 100px; margin-bottom: 20px; }
   h1 { font-family: 'Playfair Display', serif; font-size: clamp(36px, 6vw, 64px); font-weight: 900; line-height: 1.05; letter-spacing: -1px; margin-bottom: 16px; }
   h1 span { color: var(--gold); font-style: italic; }
   .subtitle { color: var(--text-muted); font-size: 16px; font-weight: 300; max-width: 500px; margin: 0 auto 24px; }
-  .data-status-bar {
-    display: flex; align-items: center; justify-content: center;
-    gap: 16px; flex-wrap: wrap;
-    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
-    border-radius: 12px; padding: 14px 24px; margin-top: 16px;
+
+  /* ── LIVE STATUS BAR ── */
+  .live-bar { display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 8px; }
+  .live-indicator { display: flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--live-red); animation: pulse-dot 2s infinite; }
+  .live-dot.loading { background: var(--gold); }
+  .live-dot.ready   { background: var(--success); }
+  @keyframes pulse-dot {
+    0%   { box-shadow: 0 0 0 0 rgba(255,68,68,0.5); }
+    70%  { box-shadow: 0 0 0 8px rgba(255,68,68,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,68,68,0); }
   }
-  .status-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
-  .status-dot.live { background: var(--success); box-shadow: 0 0 8px var(--success); animation: pulse 2s infinite; }
-  .status-dot.stale { background: var(--warning); }
-  .status-dot.error { background: var(--error); }
-  .status-dot.loading { background: var(--gold); animation: pulse 1s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  .status-divider { width: 1px; height: 16px; background: var(--border); }
+  .last-updated { font-size: 12px; color: var(--text-muted); }
+  .last-updated span { color: var(--gold); }
+
+  /* ── REFRESH BUTTON ── */
   .refresh-btn {
     display: inline-flex; align-items: center; gap: 8px;
-    background: linear-gradient(135deg, var(--gold), var(--gold-light));
-    color: var(--ocean); border: none; padding: 10px 20px; border-radius: 100px;
-    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
-    cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px;
+    background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.05));
+    border: 1px solid var(--gold); color: var(--gold);
+    padding: 9px 20px; border-radius: 100px;
+    font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: all 0.3s ease; letter-spacing: 0.5px;
   }
-  .refresh-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,168,76,0.35); }
+  .refresh-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(201,168,76,0.25), rgba(201,168,76,0.1));
+    box-shadow: 0 0 20px rgba(201,168,76,0.2); transform: translateY(-1px);
+  }
   .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-  .spin { display: inline-block; animation: spin 1s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .progress-panel {
-    display: none; background: var(--card-bg); border: 1px solid var(--border);
-    border-radius: 16px; padding: 28px; margin-bottom: 32px;
+  .refresh-icon { font-size: 16px; display: inline-block; }
+  .refresh-btn.spinning .refresh-icon { animation: spin 0.7s linear infinite; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  /* ── SCRAPER STATUS BANNER ── */
+  .scraper-banner {
+    display: none; margin-bottom: 24px;
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 20px;
   }
-  .progress-panel.visible { display: block; animation: fadeUp 0.3s ease both; }
-  .progress-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-  .progress-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; }
-  .progress-eta { font-size: 13px; color: var(--text-muted); }
-  .progress-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-  .progress-step { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid transparent; transition: all 0.3s; }
-  .progress-step.active { border-color: var(--gold); background: rgba(201,168,76,0.06); }
-  .progress-step.done { border-color: rgba(46,204,113,0.3); background: rgba(46,204,113,0.05); }
-  .progress-step.err  { border-color: rgba(231,76,60,0.3); background: rgba(231,76,60,0.05); }
-  .step-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
-  .step-text { flex: 1; font-size: 14px; }
-  .step-status { font-size: 12px; color: var(--text-muted); }
-  .progress-step.active .step-status { color: var(--gold); }
-  .progress-step.done  .step-status { color: var(--success); }
-  .progress-step.err   .step-status { color: var(--error); }
-  .progress-bar-wrap { background: rgba(255,255,255,0.07); border-radius: 100px; height: 6px; overflow: hidden; }
-  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius: 100px; transition: width 0.6s ease; width: 0%; }
-  .error-banner {
-    display: none; align-items: center; gap: 12px; background: rgba(231,76,60,0.1);
-    border: 1px solid rgba(231,76,60,0.3); border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; font-size: 14px;
+  .scraper-banner.visible { display: block; }
+  .scraper-banner-title { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
+  .scraper-lines { display: flex; gap: 12px; flex-wrap: wrap; }
+  .scraper-line-item { display: flex; align-items: center; gap: 8px; font-size: 13px; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 8px 14px; }
+  .scraper-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .scraper-dot.running  { background: var(--gold); animation: pulse-dot 1.2s infinite; }
+  .scraper-dot.done     { background: var(--success); }
+  .scraper-dot.failed   { background: var(--live-red); }
+  .scraper-dot.waiting  { background: var(--text-muted); }
+
+  /* ── LOADING OVERLAY ── */
+  .loading-overlay {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(10,22,40,0.85); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center; flex-direction: column; gap: 20px;
   }
-  .error-banner.visible { display: flex; animation: fadeUp 0.3s ease; }
-  .error-banner button { margin-left: auto; background: none; border: 1px solid rgba(231,76,60,0.4); color: var(--error); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  .loading-overlay.active { display: flex; }
+  .loading-spinner { width: 52px; height: 52px; border-radius: 50%; border: 3px solid rgba(201,168,76,0.2); border-top-color: var(--gold); animation: spin 0.8s linear infinite; }
+  .loading-text { color: var(--gold); font-size: 14px; letter-spacing: 2px; text-transform: uppercase; }
+  .loading-sub  { color: var(--text-muted); font-size: 12px; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 200;
+    background: #1a0a0a; border: 1px solid rgba(255,68,68,0.4); color: #ff8888;
+    padding: 14px 20px; border-radius: 12px; font-size: 13px;
+    display: flex; align-items: center; gap: 10px; max-width: 380px;
+    transform: translateY(100px); opacity: 0;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { background: #0a1a0a; border-color: rgba(46,204,113,0.4); color: #5ee68b; }
+  .toast.info    { background: #0a1020; border-color: rgba(201,168,76,0.4);  color: var(--gold); }
+
+  /* ── CRUISE LINES ── */
   .section-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 20px; }
   .cruise-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 48px; }
   .cruise-toggle-row { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.3s ease; animation: slideIn 0.4s ease both; }
@@ -89,8 +119,8 @@
   .cruise-info { display: flex; align-items: center; gap: 16px; }
   .cruise-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
   .norwegian .cruise-icon { background: rgba(0,150,255,0.15); }
-  .royal .cruise-icon { background: rgba(255,100,50,0.15); }
-  .princess .cruise-icon { background: rgba(200,150,255,0.15); }
+  .royal .cruise-icon     { background: rgba(255,100,50,0.15); }
+  .princess .cruise-icon  { background: rgba(200,150,255,0.15); }
   .cruise-name { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
   .cruise-meta { font-size: 13px; color: var(--text-muted); }
   .toggle-wrap { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
@@ -100,16 +130,14 @@
   .toggle.on { background: var(--gold); }
   .toggle::after { content: ''; position: absolute; width: 22px; height: 22px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
   .toggle.on::after { transform: translateX(24px); }
+
+  /* ── DETAILS ── */
   .details-panel { display: none; animation: fadeUp 0.5s ease both; }
   .details-panel.visible { display: block; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
   .details-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
   .details-title { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; }
-  .results-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .results-count { font-size: 13px; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 6px 14px; border-radius: 100px; border: 1px solid var(--border); }
-  .data-source-badge { font-size: 11px; padding: 4px 10px; border-radius: 100px; font-weight: 500; }
-  .data-source-badge.live  { background: rgba(46,204,113,0.15); color: var(--success); border: 1px solid rgba(46,204,113,0.3); }
-  .data-source-badge.demo  { background: rgba(138,165,192,0.15); color: var(--text-muted); border: 1px solid var(--border); }
   .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; padding: 20px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; }
   .stat-item { text-align: center; }
   .stat-value { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: var(--gold); }
@@ -123,96 +151,63 @@
   .cruise-card:hover { transform: translateY(-4px); border-color: rgba(201,168,76,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
   .cruise-card:hover::before { opacity: 1; }
   .card-line-badge { display: inline-block; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; margin-bottom: 14px; font-weight: 500; }
-  .badge-norwegian { background: rgba(0,150,255,0.15); color: #4db8ff; }
-  .badge-royal     { background: rgba(255,100,50,0.15); color: #ff8c69; }
-  .badge-princess  { background: rgba(200,150,255,0.15); color: #c896ff; }
-  .card-ship  { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
-  .card-title { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
-  .card-route { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
-  .card-route span { color: var(--gold); }
+  .badge-norwegian     { background: rgba(0,150,255,0.15); color: #4db8ff; }
+  .badge-royal_caribbean { background: rgba(255,100,50,0.15); color: #ff8c69; }
+  .badge-princess      { background: rgba(200,150,255,0.15); color: #c896ff; }
+  .card-ship  { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; margin-bottom: 8px; line-height: 1.3; }
+  .card-route { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
   .card-dates { display: flex; gap: 16px; margin-bottom: 16px; }
-  .date-item { flex: 1; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 10px 12px; }
+  .date-item  { flex: 1; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 10px 12px; }
   .date-label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
   .date-value { font-size: 13px; font-weight: 500; }
   .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 16px; border-top: 1px solid var(--border); }
   .duration-badge { font-size: 12px; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 6px; }
   .price-display { text-align: right; }
-  .price-label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); }
+  .price-label  { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); }
   .price-amount { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--gold); }
   .price-currency { font-size: 12px; color: var(--text-muted); margin-left: 4px; }
-  .book-btn { display: inline-block; margin-top: 12px; font-size: 12px; color: var(--gold); text-decoration: none; border: 1px solid var(--border); border-radius: 6px; padding: 5px 12px; transition: all 0.2s; }
-  .book-btn:hover { border-color: var(--gold); background: rgba(201,168,76,0.1); }
+  .live-tag { font-size: 9px; color: var(--success); letter-spacing: 1px; position: absolute; top: 12px; right: 14px; opacity: 0.8; }
   .empty-state { text-align: center; padding: 64px 24px; color: var(--text-muted); grid-column: 1/-1; }
   .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
   .empty-state h3 { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--white); margin-bottom: 8px; }
-  @media (max-width: 600px) { .stats-bar { grid-template-columns: repeat(2, 1fr); } .cards-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 600px) { .stats-bar { grid-template-columns: repeat(2,1fr); } .cards-grid { grid-template-columns: 1fr; } .live-bar { gap: 12px; } }
 </style>
 </head>
 <body>
+
+<!-- Loading Overlay (shown only on first API trigger) -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Starting Scrapers</div>
+  <div class="loading-sub">Firing up Apify actors…</div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
 <div class="container">
   <header>
-    <div class="header-badge">⚓ Live Azure Synapse Data</div>
+    <div class="header-badge">⚓ Live Azure Data</div>
     <h1>Cruise Price<br><span>Explorer</span></h1>
-    <p class="subtitle">Real prices from Norwegian, Royal Caribbean & Princess — powered by Azure Synapse Analytics</p>
-    <div class="data-status-bar">
-      <div class="status-item">
-        <div class="status-dot loading" id="statusDot"></div>
-        <span id="statusText">Loading…</span>
+    <p class="subtitle">Real prices from Norwegian, Royal Caribbean & Princess — refreshed live via Apify + Azure</p>
+
+    <div class="live-bar">
+      <div class="live-indicator">
+        <div class="live-dot" id="liveDot"></div>
+        <span id="liveStatus">Live</span>
       </div>
-      <div class="status-divider"></div>
-      <div class="status-item">
-        🕐 Last scraped: <strong id="lastScraped" style="color:var(--white);margin-left:4px">—</strong>
-      </div>
-      <div class="status-divider"></div>
-      <button class="refresh-btn" id="refreshBtn" onclick="triggerRefresh()">
-        <span id="refreshIcon">🔄</span> Refresh Live Prices
+      <div class="last-updated" id="lastUpdated">Not yet refreshed</div>
+      <button class="refresh-btn" id="refreshBtn" onclick="handleRefresh()">
+        <span class="refresh-icon" id="refreshIcon">↻</span>
+        Refresh Prices
       </button>
     </div>
   </header>
 
-  <!-- PROGRESS PANEL -->
-  <div class="progress-panel" id="progressPanel">
-    <div class="progress-header">
-      <div class="progress-title">🚢 Scraping Live Prices…</div>
-      <div class="progress-eta" id="progressEta">Estimated 3–5 minutes</div>
-    </div>
-    <div class="progress-steps">
-      <div class="progress-step" id="step-pipeline">
-        <div class="step-icon">⚙️</div>
-        <div class="step-text">Triggering Synapse Pipeline <strong>cruise_price_daily</strong></div>
-        <div class="step-status" id="step-pipeline-status">Waiting…</div>
-      </div>
-      <div class="progress-step" id="step-norwegian">
-        <div class="step-icon">🚢</div>
-        <div class="step-text">Norwegian Cruise Line — Apify scraper running</div>
-        <div class="step-status" id="step-norwegian-status">Queued</div>
-      </div>
-      <div class="progress-step" id="step-royal">
-        <div class="step-icon">👑</div>
-        <div class="step-text">Royal Caribbean — Apify scraper running</div>
-        <div class="step-status" id="step-royal-status">Queued</div>
-      </div>
-      <div class="progress-step" id="step-princess">
-        <div class="step-icon">👸</div>
-        <div class="step-text">Princess Cruises — Apify scraper running</div>
-        <div class="step-status" id="step-princess-status">Queued</div>
-      </div>
-      <div class="progress-step" id="step-load">
-        <div class="step-icon">📊</div>
-        <div class="step-text">Loading fresh prices into Explorer</div>
-        <div class="step-status" id="step-load-status">Queued</div>
-      </div>
-    </div>
-    <div class="progress-bar-wrap">
-      <div class="progress-bar-fill" id="progressBar"></div>
-    </div>
-  </div>
-
-  <!-- ERROR BANNER -->
-  <div class="error-banner" id="errorBanner">
-    <span>⚠️</span>
-    <span id="errorMsg">Could not connect to API.</span>
-    <button onclick="dismissError()">Dismiss</button>
+  <!-- Scraper status banner — appears while Apify is running -->
+  <div class="scraper-banner" id="scraperBanner">
+    <div class="scraper-banner-title">⚙ Scraper Status</div>
+    <div class="scraper-lines" id="scraperLines"></div>
   </div>
 
   <div class="section-label">⚙ Select Cruise Lines to Explore</div>
@@ -230,17 +225,17 @@
         <div class="toggle" id="toggle-norwegian"></div>
       </div>
     </div>
-    <div class="cruise-toggle-row royal" onclick="toggleLine('royal')">
+    <div class="cruise-toggle-row royal" onclick="toggleLine('royal_caribbean')">
       <div class="cruise-info">
         <div class="cruise-icon">👑</div>
         <div>
           <div class="cruise-name">Royal Caribbean</div>
-          <div class="cruise-meta" id="meta-royal">Loading…</div>
+          <div class="cruise-meta" id="meta-royal_caribbean">Loading…</div>
         </div>
       </div>
       <div class="toggle-wrap">
-        <span class="toggle-label" id="label-royal">No</span>
-        <div class="toggle" id="toggle-royal"></div>
+        <span class="toggle-label" id="label-royal_caribbean">No</span>
+        <div class="toggle" id="toggle-royal_caribbean"></div>
       </div>
     </div>
     <div class="cruise-toggle-row princess" onclick="toggleLine('princess')">
@@ -261,10 +256,7 @@
   <div class="details-panel" id="detailsPanel">
     <div class="details-header">
       <div class="details-title">Cruise Results</div>
-      <div class="results-meta">
-        <div class="results-count" id="resultsCount">0 cruises</div>
-        <div class="data-source-badge demo" id="dataSourceBadge">Loading…</div>
-      </div>
+      <div class="results-count" id="resultsCount">0 cruises</div>
     </div>
     <div class="stats-bar">
       <div class="stat-item"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total Cruises</div></div>
@@ -275,7 +267,7 @@
     <div class="filter-bar">
       <button class="filter-btn active" onclick="filterBy('all', this)">All</button>
       <button class="filter-btn" onclick="filterBy('norwegian', this)">Norwegian</button>
-      <button class="filter-btn" onclick="filterBy('royal', this)">Royal Caribbean</button>
+      <button class="filter-btn" onclick="filterBy('royal_caribbean', this)">Royal Caribbean</button>
       <button class="filter-btn" onclick="filterBy('princess', this)">Princess</button>
       <button class="filter-btn" onclick="sortBy('price', this)">💰 Cheapest First</button>
       <button class="filter-btn" onclick="sortBy('date', this)">📅 Earliest First</button>
@@ -286,212 +278,278 @@
 </div>
 
 <script>
-// ================================================================
-// CONFIGURATION
-// ================================================================
-const API_URL     = 'https://cruisebot-func-asgrc7czhnhycdbe.centralindia-01.azurewebsites.net/api/cruises';
-const REFRESH_URL = 'https://cruisebot-func-asgrc7czhnhycdbe.centralindia-01.azurewebsites.net/api/refresh';
+// ─────────────────────────────────────────────────────────────
+// CONFIG — set your Azure Function base URL here
+// ─────────────────────────────────────────────────────────────
+const API_BASE = "https://<YOUR_FUNCTION_APP>.azurewebsites.net/api";
+// e.g. "https://cruise-func.azurewebsites.net/api"
 
-// ── STATE ──────────────────────────────────────────────────────
-let liveData  = { norwegian: [], royal: [], princess: [] };
-let demoMode  = true;
-let activeLines   = new Set();
-let currentFilter = 'all';
-let currentSort   = 'date';
-let refreshStartTime = null;
-let etaTimer = null;
+const POLL_INTERVAL_MS  = 30 * 1000;  // poll /refresh-status every 30s
+const MAX_POLL_ATTEMPTS = 20;          // give up after 10 minutes
 
-// ── DEMO FALLBACK ──────────────────────────────────────────────
-const DEMO_DATA = {
-  norwegian: [
-    { ship:"Norwegian Getaway", title:"Caribbean 7 Nights", departure:"2026-03-23", arrival:"2026-03-30", departurePort:"MIA", arrivalPort:"MIA", duration:7, price:350, currency:"EUR", line:"norwegian" },
-    { ship:"Norwegian Escape",  title:"Caribbean 7 Nights", departure:"2026-04-26", arrival:"2026-05-03", departurePort:"MSY", arrivalPort:"MSY", duration:7, price:515, currency:"EUR", line:"norwegian" },
-    { ship:"Norwegian Aqua",    title:"Caribbean 7 Nights", departure:"2027-10-31", arrival:"2027-11-07", departurePort:"PCV", arrivalPort:"PCV", duration:7, price:1120, currency:"EUR", line:"norwegian" },
-  ],
-  royal: [
-    { ship:"Wonder of the Seas", title:"Bahamas & Perfect Day", departure:"2026-04-27", arrival:"2026-05-01", departurePort:"Miami", arrivalPort:"Miami", duration:4, price:553, currency:"USD", line:"royal" },
-    { ship:"Icon of the Seas",   title:"Eastern Caribbean",    departure:"2026-04-25", arrival:"2026-05-02", departurePort:"Miami", arrivalPort:"Miami", duration:7, price:1644, currency:"USD", line:"royal" },
-  ],
-  princess: [
-    { ship:"Sun Princess",       title:"Caribbean Getaway", departure:"2026-03-01", arrival:"2026-03-05", departurePort:"Fort Lauderdale", arrivalPort:"Fort Lauderdale", duration:4,  price:499,  currency:"USD", line:"princess" },
-    { ship:"Enchanted Princess", title:"Eastern Caribbean", departure:"2026-03-07", arrival:"2026-03-17", departurePort:"Fort Lauderdale", arrivalPort:"Fort Lauderdale", duration:10, price:1299, currency:"USD", line:"princess" },
-  ]
-};
+// ─────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────
+let CRUISE_DATA    = { norwegian: [], royal_caribbean: [], princess: [] };
+let activeLines    = new Set();
+let currentFilter  = 'all';
+let currentSort    = 'date';
+let dataSource     = 'none';   // 'none' | 'api' | 'fallback'
+let pollTimer      = null;
+let pollAttempts   = 0;
+let isRefreshing   = false;
 
-// ── FETCH LIVE DATA FROM API ───────────────────────────────────
-async function loadLiveData() {
-  const res = await fetch(API_URL);
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
-  const json = await res.json();
-  if (json.status !== 'success') throw new Error(json.message || 'API returned error');
+const LINE_LABELS  = { norwegian: 'Norwegian', royal_caribbean: 'Royal Caribbean', princess: 'Princess' };
+const LINE_ICONS   = { norwegian: '🚢', royal_caribbean: '👑', princess: '👸' };
+const BADGE_CLASSES = { norwegian: 'badge-norwegian', royal_caribbean: 'badge-royal_caribbean', princess: 'badge-princess' };
 
-  // Reset
-  liveData = { norwegian: [], royal: [], princess: [] };
+// ─────────────────────────────────────────────────────────────
+// ON PAGE LOAD — fetch latest data from /api/cruises
+// ─────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadLatestData();
+});
 
-  json.data.forEach(r => {
-    // Map cruise_line values: 'norwegian', 'royal', 'princess'
-    const lineKey = r.cruise_line || r.cruiseLine || '';
-    const key = lineKey.toLowerCase().includes('norwegian') ? 'norwegian'
-              : lineKey.toLowerCase().includes('royal')     ? 'royal'
-              : lineKey.toLowerCase().includes('princess')  ? 'princess'
-              : null;
-    if (!key) return;
+async function loadLatestData() {
+  try {
+    const res  = await fetch(`${API_BASE}/cruises?line=all&sort=price`);
+    const json = await res.json();
 
-    // Parse duration from nightTitle e.g. "7 Night Caribbean"
-    const nightsMatch = (r.duration_label || r.nightTitle || '').match(/^(\d+)/);
-    const duration = nightsMatch ? parseInt(nightsMatch[1]) : null;
+    if (json.status === 'success' && json.data?.length > 0) {
+      ingestApiData(json.data);
+      updateLastUpdated(json.last_scraped);
+      setLiveStatus('ready', 'Live');
+      dataSource = 'api';
+    } else {
+      setLiveStatus('idle', 'No data');
+      updateMeta();
+    }
+  } catch (e) {
+    console.warn('Could not load from API, showing empty state:', e);
+    setLiveStatus('idle', 'API unreachable');
+    updateMeta();
+  }
+}
 
-    liveData[key].push({
-      ship:          r.shipName || r.ship || r.title,
-      title:         r.title,
-      departure:     r.departureDate,
-      arrival:       r.arrivalDate,
-      departurePort: r.departurePort || r.departurePortName || '—',
-      arrivalPort:   r.arrivalPort   || r.arrivalPortName   || '—',
-      duration,
-      price:         parseFloat(r.best_price || r.interior_price || r.priceAmount || 0),
-      currency:      r.currency || 'USD',
-      line:          key,
-      booking_url:   r.booking_url || null,
-      interior_price:  r.interior_price,
-      oceanview_price: r.oceanview_price,
-      balcony_price:   r.balcony_price,
-      minisuite_price: r.minisuite_price,
+// ─────────────────────────────────────────────────────────────
+// REFRESH BUTTON HANDLER
+// Step 1: POST /api/refresh  → fires scrapers, returns run IDs instantly
+// Step 2: Poll /api/refresh-status every 30s until done
+// Step 3: Reload /api/cruises when status === 'done' | 'partial'
+// ─────────────────────────────────────────────────────────────
+async function handleRefresh() {
+  if (isRefreshing) return;
+  isRefreshing = true;
+
+  const btn     = document.getElementById('refreshBtn');
+  const overlay = document.getElementById('loadingOverlay');
+
+  btn.disabled = true;
+  btn.classList.add('spinning');
+  setLiveStatus('loading', 'Starting…');
+  overlay.classList.add('active');
+
+  try {
+    const res  = await fetch(`${API_BASE}/refresh`, { method: 'POST' });
+    const json = await res.json();
+
+    overlay.classList.remove('active');
+
+    if (json.status === 'started') {
+      showToast(`🚀 Scrapers started for: ${json.started.join(', ')}. Checking status every 30s…`, 'info');
+      setLiveStatus('loading', 'Scraping…');
+      showScraperBanner(json.started, []);
+      startPolling();
+    } else {
+      showToast('❌ Failed to start scrapers: ' + (json.errors ? JSON.stringify(json.errors) : 'unknown error'), 'error');
+      resetRefreshBtn();
+    }
+  } catch (e) {
+    overlay.classList.remove('active');
+    showToast('❌ Could not reach API: ' + e.message, 'error');
+    resetRefreshBtn();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// POLLING — calls /api/refresh-status every 30s
+// ─────────────────────────────────────────────────────────────
+function startPolling() {
+  stopPolling();
+  pollAttempts = 0;
+  pollTimer    = setInterval(pollStatus, POLL_INTERVAL_MS);
+  // Also fire immediately after 5s (give Apify a moment to register the run)
+  setTimeout(pollStatus, 5000);
+}
+
+function stopPolling() {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+}
+
+async function pollStatus() {
+  pollAttempts++;
+  if (pollAttempts > MAX_POLL_ATTEMPTS) {
+    stopPolling();
+    showToast('⏱ Scraping is taking longer than expected. Data will update automatically when ready.', 'info');
+    resetRefreshBtn();
+    return;
+  }
+
+  try {
+    const res  = await fetch(`${API_BASE}/refresh-status`);
+    const json = await res.json();
+
+    // Update scraper banner
+    if (json.lines) {
+      const running = Object.keys(json.lines).filter(l => json.lines[l].status === 'RUNNING');
+      const done    = Object.keys(json.lines).filter(l => json.lines[l].csv_saved);
+      const failed  = Object.keys(json.lines).filter(l =>
+        ['FAILED','ABORTED','TIMED-OUT','FAILED_TO_START'].includes(json.lines[l].status) && !json.lines[l].csv_saved
+      );
+      showScraperBanner(running, done, failed);
+    }
+
+    if (json.status === 'done' || json.status === 'partial') {
+      stopPolling();
+      showToast(json.message, json.status === 'done' ? 'success' : 'info');
+
+      // Reload fresh data from blob
+      await loadLatestData();
+      if (activeLines.size > 0) renderDetails();
+      resetRefreshBtn();
+
+    } else if (json.status === 'failed') {
+      stopPolling();
+      showToast(json.message || '❌ All scrapers failed.', 'error');
+      resetRefreshBtn();
+
+    } else if (json.status === 'running') {
+      setLiveStatus('loading', `Scraping… (${pollAttempts * 30}s)`);
+    }
+  } catch (e) {
+    console.warn('Poll error:', e);
+  }
+}
+
+function resetRefreshBtn() {
+  isRefreshing = false;
+  const btn    = document.getElementById('refreshBtn');
+  btn.disabled = false;
+  btn.classList.remove('spinning');
+  if (dataSource === 'api') setLiveStatus('ready', 'Live');
+  else setLiveStatus('idle', 'No data');
+}
+
+// ─────────────────────────────────────────────────────────────
+// SCRAPER BANNER
+// ─────────────────────────────────────────────────────────────
+function showScraperBanner(running, done, failed = []) {
+  const banner = document.getElementById('scraperBanner');
+  const lines  = document.getElementById('scraperLines');
+
+  const allLines = ['norwegian', 'royal_caribbean', 'princess'];
+  lines.innerHTML = allLines.map(line => {
+    let dotClass = 'waiting', label = 'Waiting';
+    if (running.includes(line))      { dotClass = 'running'; label = 'Scraping…'; }
+    else if (done.includes(line))    { dotClass = 'done';    label = 'Updated ✓'; }
+    else if (failed.includes(line))  { dotClass = 'failed';  label = 'Failed'; }
+    return `
+      <div class="scraper-line-item">
+        <div class="scraper-dot ${dotClass}"></div>
+        <span>${LINE_ICONS[line]} ${LINE_LABELS[line]}: <strong>${label}</strong></span>
+      </div>`;
+  }).join('');
+
+  banner.classList.add('visible');
+
+  // Hide banner once all done
+  if (done.length + failed.length === allLines.length) {
+    setTimeout(() => banner.classList.remove('visible'), 5000);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// INGEST API DATA → CRUISE_DATA
+// ─────────────────────────────────────────────────────────────
+function ingestApiData(records) {
+  CRUISE_DATA = { norwegian: [], royal_caribbean: [], princess: [] };
+
+  records.forEach(r => {
+    const line = r.cruise_line;
+    if (!CRUISE_DATA[line]) return;
+    CRUISE_DATA[line].push({
+      ship:          r.ship || r.title || 'Unknown Ship',
+      departure:     r.departureDate || '',
+      arrival:       r.arrivalDate   || '',
+      departurePort: r.departurePort || '—',
+      arrivalPort:   r.arrivalPort   || '—',
+      duration:      parseDuration(r.duration_label),
+      price:         parseFloat(r.best_price || r.interior_price || 0),
+      currency:      r.currency || CURRENCY_MAP[line] || 'USD',
+      destination:   r.destination || '',
+      booking_url:   r.booking_url  || '',
+      route:         r.route        || '',
     });
   });
 
-  // Update last scraped from API response
-  if (json.last_scraped) {
-    const dates = Object.values(json.last_scraped).filter(Boolean);
-    if (dates.length) {
-      const latest = dates.sort().reverse()[0];
-      try {
-        const d = new Date(latest);
-        document.getElementById('lastScraped').textContent =
-          d.toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-      } catch { document.getElementById('lastScraped').textContent = latest; }
-    }
-  }
-
-  return json.count;
+  updateMeta();
+  if (activeLines.size > 0) renderDetails();
 }
 
-// ── ON PAGE LOAD ───────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', async () => {
-  setStatusBar('loading');
-  try {
-    const count = await loadLiveData();
-    if (count > 0) {
-      demoMode = false;
-      setStatusBar('live');
-    } else {
-      setStatusBar('stale');
-      document.getElementById('lastScraped').textContent = 'No data yet';
-    }
-  } catch (err) {
-    setStatusBar('error');
-    document.getElementById('lastScraped').textContent = 'Demo mode';
-    showError(`API unavailable: ${err.message} — showing demo data`);
-  }
-  updateLineMetas();
-});
-
-// ── REFRESH BUTTON ─────────────────────────────────────────────
-async function triggerRefresh() {
-  const btn  = document.getElementById('refreshBtn');
-  const icon = document.getElementById('refreshIcon');
-  const panel = document.getElementById('progressPanel');
-
-  btn.disabled = true;
-  icon.innerHTML = '<span class="spin">⟳</span>';
-  panel.classList.add('visible');
-  dismissError();
-
-  refreshStartTime = Date.now();
-  etaTimer = setInterval(updateEta, 1000);
-
-  // Reset steps
-  ['pipeline','norwegian','royal','princess','load'].forEach(s => setStep(s, '', 'Queued'));
-  setProgressBar(0);
-
-  // Step 1 — show pipeline triggering
-  setStep('pipeline', 'active', 'Triggering pipeline…');
-  setProgressBar(5);
-
-  // Step 1 — trigger real Apify scrape via Function App
-  const refreshRes = await fetch(REFRESH_URL, { method: 'POST' });
-  const refreshJson = await refreshRes.json();
-  if (refreshJson.status === 'error') throw new Error(refreshJson.message);
-  setStep('pipeline', 'done', '✓ Triggered');
-  setProgressBar(10);
-
-  // Steps 2–4 — animate scrapers (each ~60s in reality)
-  const scrapers = ['norwegian', 'royal', 'princess'];
-  for (let i = 0; i < scrapers.length; i++) {
-    setStep(scrapers[i], 'active', 'Scraping…');
-    setProgressBar(15 + i * 20);
-    await sleep(2000); // visual only — real scraping happens in Azure
-  }
-
-  // Step 5 — load fresh data from API
-  setStep('load', 'active', 'Fetching prices…');
-  setProgressBar(85);
-
-  try {
-    await sleep(1000);
-    const count = await loadLiveData();
-    demoMode = false;
-    scrapers.forEach(s => setStep(s, 'done', '✓ Done'));
-    setStep('load', 'done', `✓ ${count} cruises loaded`);
-    setProgressBar(100);
-    setStatusBar('live');
-    updateLineMetas();
-    renderDetails();
-
-    setTimeout(() => {
-      panel.classList.remove('visible');
-      setProgressBar(0);
-    }, 3000);
-
-  } catch (err) {
-    setStep('load', 'err', '✗ Failed');
-    showError(`Could not load fresh data: ${err.message}`);
-    panel.classList.remove('visible');
-  }
-
-  clearInterval(etaTimer);
-  btn.disabled = false;
-  icon.innerHTML = '🔄';
+function parseDuration(label) {
+  if (!label) return 7;
+  const match = String(label).match(/(\d+)/);
+  return match ? parseInt(match[1]) : 7;
 }
 
-// ── STATUS BAR ────────────────────────────────────────────────
-function setStatusBar(state) {
-  const dot  = document.getElementById('statusDot');
-  const text = document.getElementById('statusText');
-  dot.className = `status-dot ${state}`;
-  const labels = { live:'Live data ✓', stale:'Cached data', error:'API unavailable', loading:'Loading…' };
-  text.textContent = labels[state] || state;
-}
+const CURRENCY_MAP = { norwegian: 'EUR', royal_caribbean: 'USD', princess: 'USD' };
 
-// ── LINE META SUMMARIES ───────────────────────────────────────
-function updateLineMetas() {
-  const src = demoMode ? DEMO_DATA : liveData;
-  const dests = {
-    norwegian: 'Caribbean, Alaska, Mediterranean, Bahamas',
-    royal:     'Caribbean, Bahamas, Perfect Day',
-    princess:  'Caribbean, Alaska, Mediterranean, Mexico'
-  };
-  ['norwegian','royal','princess'].forEach(line => {
-    const cruises = src[line] || [];
-    const prices  = cruises.map(c => c.price).filter(p => p > 0);
-    const min     = prices.length ? Math.min(...prices).toLocaleString() : '—';
-    const curr    = cruises[0]?.currency || 'USD';
-    document.getElementById(`meta-${line}`).textContent =
-      `${cruises.length || '—'} cruises · From ${min} ${curr} · ${dests[line]}`;
+function updateMeta() {
+  Object.keys(CRUISE_DATA).forEach(line => {
+    const data   = CRUISE_DATA[line];
+    const el     = document.getElementById(`meta-${line}`);
+    if (!el) return;
+    if (!data.length) { el.textContent = 'No data — click Refresh'; return; }
+    const prices = data.map(d => d.price).filter(p => p > 0);
+    const min    = prices.length ? Math.min(...prices) : 0;
+    const dests  = [...new Set(data.map(d => d.destination || d.arrivalPort).filter(Boolean))].slice(0, 4).join(', ');
+    const cur    = data[0]?.currency || '';
+    el.textContent = `${data.length} cruises · From ${min.toLocaleString()} ${cur} · ${dests || 'Various'}`;
   });
 }
 
-// ── TOGGLE ────────────────────────────────────────────────────
+function updateLastUpdated(last_scraped) {
+  if (!last_scraped) return;
+  const parts = Object.values(last_scraped).filter(Boolean);
+  if (!parts.length) return;
+  const ts  = parts[0].replace(/_/g, ' ');
+  document.getElementById('lastUpdated').innerHTML = `Last scraped: <span>${ts}</span>`;
+}
+
+// ─────────────────────────────────────────────────────────────
+// LIVE DOT STATUS
+// ─────────────────────────────────────────────────────────────
+function setLiveStatus(state, label) {
+  const dot = document.getElementById('liveDot');
+  const txt = document.getElementById('liveStatus');
+  dot.className = 'live-dot' + (state === 'loading' ? ' loading' : state === 'ready' ? ' ready' : '');
+  txt.textContent = label;
+}
+
+// ─────────────────────────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className   = `toast ${type === 'success' ? 'success' : type === 'info' ? 'info' : ''} show`;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toast.classList.remove('show'), 5000);
+}
+
+// ─────────────────────────────────────────────────────────────
+// TOGGLE / FILTER / SORT / RENDER
+// ─────────────────────────────────────────────────────────────
 function toggleLine(line) {
   const toggle = document.getElementById(`toggle-${line}`);
   const label  = document.getElementById(`label-${line}`);
@@ -516,13 +574,17 @@ function filterBy(filter, btn) {
   renderCards();
 }
 
-function sortBy(type) { currentSort = type; renderCards(); }
+function sortBy(type, btn) {
+  currentSort = type;
+  btn.classList.add('active');
+  renderCards();
+}
 
-// ── RENDER ────────────────────────────────────────────────────
 function getActiveData() {
-  const src = demoMode ? DEMO_DATA : liveData;
-  const data = [];
-  activeLines.forEach(line => (src[line] || []).forEach(c => data.push({ ...c, line })));
+  let data = [];
+  activeLines.forEach(line => {
+    (CRUISE_DATA[line] || []).forEach(cruise => data.push({ ...cruise, line }));
+  });
   return data;
 }
 
@@ -530,9 +592,6 @@ function renderDetails() {
   const panel = document.getElementById('detailsPanel');
   if (activeLines.size === 0) { panel.classList.remove('visible'); return; }
   panel.classList.add('visible');
-  const badge = document.getElementById('dataSourceBadge');
-  badge.textContent = demoMode ? '⚠ Demo Data' : '✓ Live Data';
-  badge.className   = `data-source-badge ${demoMode ? 'demo' : 'live'}`;
   renderStats();
   renderCards();
 }
@@ -540,10 +599,10 @@ function renderDetails() {
 function renderStats() {
   const data   = getActiveData();
   const prices = data.map(d => d.price).filter(p => p > 0);
-  document.getElementById('statTotal').textContent = data.length;
-  document.getElementById('statMin').textContent   = prices.length ? Math.min(...prices).toLocaleString() : '—';
-  document.getElementById('statMax').textContent   = prices.length ? Math.max(...prices).toLocaleString() : '—';
-  document.getElementById('statAvg').textContent   = prices.length ? Math.round(prices.reduce((a,b)=>a+b,0)/prices.length).toLocaleString() : '—';
+  document.getElementById('statTotal').textContent    = data.length;
+  document.getElementById('statMin').textContent      = prices.length ? Math.min(...prices).toLocaleString() : '—';
+  document.getElementById('statMax').textContent      = prices.length ? Math.max(...prices).toLocaleString() : '—';
+  document.getElementById('statAvg').textContent      = prices.length ? Math.round(prices.reduce((a,b)=>a+b,0)/prices.length).toLocaleString() : '—';
   document.getElementById('resultsCount').textContent = `${data.length} cruise${data.length!==1?'s':''}`;
 }
 
@@ -556,71 +615,37 @@ function renderCards() {
 
   const grid = document.getElementById('cardsGrid');
   if (!data.length) {
-    grid.innerHTML = `<div class="empty-state"><div class="icon">🌊</div><h3>No Results</h3><p>Try selecting a different cruise line or filter</p></div>`;
+    grid.innerHTML = `<div class="empty-state"><div class="icon">🌊</div><h3>No Results</h3><p>Try selecting a different cruise line or clicking Refresh</p></div>`;
     return;
   }
 
-  const lineLabels   = { norwegian:'Norwegian', royal:'Royal Caribbean', princess:'Princess' };
-  const badgeClasses = { norwegian:'badge-norwegian', royal:'badge-royal', princess:'badge-princess' };
-
-  grid.innerHTML = data.map((c, i) => `
+  grid.innerHTML = data.map((cruise, i) => `
     <div class="cruise-card" style="animation-delay:${i*0.04}s">
-      <div class="card-line-badge ${badgeClasses[c.line]}">${lineLabels[c.line]}</div>
-      <div class="card-ship">${c.ship}</div>
-      <div class="card-title">${c.title}</div>
-      <div class="card-route">${c.departurePort === c.arrivalPort ? `🔄 Round trip · ${c.departurePort}` : `${c.departurePort} <span>→</span> ${c.arrivalPort}`}</div>
+      ${dataSource === 'api' ? '<span class="live-tag">● LIVE</span>' : ''}
+      <div class="card-line-badge ${BADGE_CLASSES[cruise.line]}">${LINE_LABELS[cruise.line]}</div>
+      <div class="card-ship">${cruise.ship}</div>
+      <div class="card-route">${cruise.route || `${cruise.departurePort} → ${cruise.arrivalPort}`}</div>
       <div class="card-dates">
-        <div class="date-item"><div class="date-label">Departure</div><div class="date-value">${formatDate(c.departure)}</div></div>
-        <div class="date-item"><div class="date-label">Arrival</div><div class="date-value">${formatDate(c.arrival)}</div></div>
+        <div class="date-item"><div class="date-label">Departure</div><div class="date-value">${formatDate(cruise.departure)}</div></div>
+        <div class="date-item"><div class="date-label">Arrival</div><div class="date-value">${formatDate(cruise.arrival)}</div></div>
       </div>
       <div class="card-footer">
-        <div class="duration-badge">${c.duration ? `⏱ ${c.duration} nights` : '—'}</div>
+        <div class="duration-badge">⏱ ${cruise.duration} nights</div>
         <div class="price-display">
           <div class="price-label">From</div>
-          <div class="price-amount">${Number(c.price).toLocaleString()}<span class="price-currency">${c.currency}</span></div>
+          <div class="price-amount">${cruise.price.toLocaleString()}<span class="price-currency">${cruise.currency}</span></div>
         </div>
       </div>
-      ${c.booking_url ? `<a class="book-btn" href="${c.booking_url}" target="_blank" rel="noopener">Book Now →</a>` : ''}
+      ${cruise.booking_url ? `<a href="${cruise.booking_url}" target="_blank" style="display:block;margin-top:12px;font-size:11px;color:var(--gold);text-align:right;text-decoration:none;letter-spacing:1px;">BOOK NOW →</a>` : ''}
     </div>
   `).join('');
 }
 
 function formatDate(d) {
   if (!d) return '—';
-  try { return new Date(d).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }); }
-  catch { return d; }
-}
-
-// ── PROGRESS HELPERS ──────────────────────────────────────────
-function setStep(id, state, statusText) {
-  const el = document.getElementById(`step-${id}`);
-  const st = document.getElementById(`step-${id}-status`);
-  if (!el || !st) return;
-  el.className = `progress-step ${state}`;
-  st.textContent = statusText;
-}
-
-function setProgressBar(pct) {
-  document.getElementById('progressBar').style.width = pct + '%';
-}
-
-function updateEta() {
-  if (!refreshStartTime) return;
-  const elapsed = Math.round((Date.now() - refreshStartTime) / 1000);
-  const mins = Math.floor(elapsed / 60), secs = elapsed % 60;
-  document.getElementById('progressEta').textContent =
-    `⏱ ${mins > 0 ? `${mins}m ` : ''}${secs}s elapsed`;
-}
-
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-function showError(msg) {
-  document.getElementById('errorMsg').textContent = msg;
-  document.getElementById('errorBanner').classList.add('visible');
-}
-
-function dismissError() {
-  document.getElementById('errorBanner').classList.remove('visible');
+  const parsed = new Date(d);
+  if (isNaN(parsed)) return d;
+  return parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 </script>
 </body>
