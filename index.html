@@ -230,7 +230,8 @@
   .trip-type.round { background: rgba(255,255,255,0.08); color: var(--muted); }
   .trip-type.oneway { background: rgba(74,201,148,0.15); color: #7de8b8; }
 
-  .card-title { font-family: 'Playfair Display', serif; font-size: 16px; line-height: 1.3; margin-bottom: 10px; }
+  .card-title { font-family: 'Playfair Display', serif; font-size: 16px; line-height: 1.3; margin-bottom: 8px; }
+  .card-meta-row { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-bottom: 10px; flex-wrap: wrap; }
   .card-ship { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
 
   .card-route { font-size: 13px; color: #b0c8d8; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
@@ -241,6 +242,8 @@
   .price-section { border-top: 1px solid var(--border); padding-top: 14px; }
   .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
   .price-item { background: rgba(255,255,255,0.03); border-radius: 6px; padding: 8px 10px; }
+  .price-item-best { background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.25); }
+  .price-item-best .price-label { color: var(--gold); }
   .price-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 3px; }
   .price-usd { font-size: 15px; font-weight: 600; color: var(--usd); }
   .price-eur { font-size: 12px; color: var(--eur); margin-top: 1px; opacity: 0.9; }
@@ -470,25 +473,79 @@ function updateScrapedTimes(last_scraped) {
   }
 }
 
-// ─── POPULATE FILTER DROPDOWNS ──────────────────────────────
-function populateFilters() {
-  const deps = new Set(), arrs = new Set(), dests = new Set();
-  for (const c of allCruises) {
-    if (c.departurePort) deps.add(c.departurePort);
-    if (c.arrivalPort) arrs.add(c.arrivalPort);
-    const dest = c.destination;
-    if (dest) {
-      // destination might be array-like string
-      const parts = Array.isArray(dest) ? dest : String(dest).replace(/[\[\]'"]/g,'').split(',');
-      parts.forEach(p => { const t = p.trim(); if(t) dests.add(t); });
-    }
+// ─── PORT PARSING ────────────────────────────────────────────
+// Ports arrive as either a plain string "Miami" or a JSON-like
+// object string "{'name': 'Fort Lauderdale, Florida', 'code': 'FLL'}"
+function parsePort(raw) {
+  if (!raw) return null;
+  const s = String(raw).trim();
+  // Try to extract name and code from dict-like string
+  const nameMatch = s.match(/['"]?name['"]?\s*:\s*['"]([^'"]+)['"]/);
+  const codeMatch = s.match(/['"]?code['"]?\s*:\s*['"]([^'"]+)['"]/);
+  if (nameMatch) {
+    const name = nameMatch[1].trim();
+    const code = codeMatch ? codeMatch[1].trim() : null;
+    // Shorten long names: "Fort Lauderdale, Florida" → "Fort Lauderdale"
+    const shortName = name.split(',')[0].trim();
+    return { display: code ? `${shortName} (${code})` : shortName, code: code || shortName, name: shortName };
   }
-  fillSelect('filterDep', [...deps].sort(), 'All Ports');
-  fillSelect('filterArr', [...arrs].sort(), 'All Ports');
-  fillSelect('filterDest', [...dests].sort(), 'All Destinations');
+  // Plain string
+  return { display: s, code: s, name: s };
 }
 
-function fillSelect(id, items, placeholder) {
+// ─── DESTINATION PARSING ────────────────────────────────────
+function parseDest(raw) {
+  if (!raw) return '';
+  const s = String(raw);
+  // Handle Python list strings like "['Caribbean', 'Bahamas']"
+  const cleaned = s.replace(/[\[\]]/g, '').replace(/['"]/g, '').trim();
+  // Take first destination if multiple
+  return cleaned.split(',')[0].trim();
+}
+
+// ─── ROUND TRIP DETECTION ────────────────────────────────────
+function isRoundTrip(c) {
+  const dep = parsePort(c.departurePort);
+  const arr = parsePort(c.arrivalPort);
+  if (!arr || !dep) return true; // no arrival = assume round
+  // Same port = round trip
+  if (dep.code === arr.code) return true;
+  if (dep.name.toLowerCase() === arr.name.toLowerCase()) return true;
+  // No arrival info at all
+  if (!c.arrivalPort || String(c.arrivalPort).trim() === '' || String(c.arrivalPort).trim() === 'None') return true;
+  return false;
+}
+
+// ─── POPULATE FILTER DROPDOWNS ──────────────────────────────
+function populateFilters() {
+  const depMap = new Map(), arrMap = new Map(), dests = new Set();
+  for (const c of allCruises) {
+    const dep = parsePort(c.departurePort);
+    const arr = parsePort(c.arrivalPort);
+    if (dep) depMap.set(dep.code, dep.display);
+    if (arr && arr.code !== dep?.code) arrMap.set(arr.code, arr.display);
+    const d = parseDest(c.destination);
+    if (d) dests.add(d);
+  }
+  fillSelect('filterDep', [...depMap.entries()].sort((a,b)=>a[1].localeCompare(b[1])), 'All Ports');
+  fillSelect('filterArr', [...arrMap.entries()].sort((a,b)=>a[1].localeCompare(b[1])), 'All Ports');
+  fillSelectPlain('filterDest', [...dests].sort(), 'All Destinations');
+}
+
+function fillSelect(id, entries, placeholder) {
+  // entries = [[value, label], ...]
+  const sel = document.getElementById(id);
+  const current = sel.value;
+  sel.innerHTML = `<option value="">${placeholder}</option>`;
+  entries.forEach(([val, label]) => {
+    const o = document.createElement('option');
+    o.value = val; o.textContent = label;
+    if (val === current) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+function fillSelectPlain(id, items, placeholder) {
   const sel = document.getElementById(id);
   const current = sel.value;
   sel.innerHTML = `<option value="">${placeholder}</option>`;
@@ -502,8 +559,8 @@ function fillSelect(id, items, placeholder) {
 
 // ─── FILTERS ────────────────────────────────────────────────
 function applyFilters() {
-  const dep = document.getElementById('filterDep').value;
-  const arr = document.getElementById('filterArr').value;
+  const depFilter = document.getElementById('filterDep').value;
+  const arrFilter = document.getElementById('filterArr').value;
   const dest = document.getElementById('filterDest').value;
   const trip = document.getElementById('filterTrip').value;
   const nights = document.getElementById('filterNights').value;
@@ -512,16 +569,21 @@ function applyFilters() {
 
   filteredCruises = allCruises.filter(c => {
     if (activeLine !== 'all' && c.cruise_line !== activeLine) return false;
-    if (dep && c.departurePort !== dep) return false;
-    if (arr && c.arrivalPort !== arr) return false;
+
+    const dep = parsePort(c.departurePort);
+    const arr = parsePort(c.arrivalPort);
+
+    if (depFilter && dep?.code !== depFilter) return false;
+    if (arrFilter && arr?.code !== arrFilter) return false;
+
     if (dest) {
-      const d = String(c.destination || '');
+      const d = parseDest(c.destination);
       if (!d.toLowerCase().includes(dest.toLowerCase())) return false;
     }
     if (trip) {
-      const isRound = c.departurePort === c.arrivalPort || !c.arrivalPort;
-      if (trip === 'round' && !isRound) return false;
-      if (trip === 'oneway' && isRound) return false;
+      const round = isRoundTrip(c);
+      if (trip === 'round' && !round) return false;
+      if (trip === 'oneway' && round) return false;
     }
     if (nights) {
       const n = extractNights(c.duration_label);
@@ -535,7 +597,6 @@ function applyFilters() {
       if (depMonth !== month) return false;
     }
     if (maxPrice) {
-      // convert to USD for comparison
       const priceUSD = getPriceInUSD(c);
       if (!priceUSD || priceUSD > maxPrice) return false;
     }
@@ -581,7 +642,7 @@ function convertPrice(amount, fromCurrency) {
 // ─── STATS ──────────────────────────────────────────────────
 function updateStats() {
   const pricesUSD = filteredCruises.map(c => getPriceInUSD(c)).filter(Boolean);
-  const rounds = filteredCruises.filter(c => c.departurePort === c.arrivalPort || !c.arrivalPort).length;
+  const rounds = filteredCruises.filter(c => isRoundTrip(c)).length;
   document.getElementById('statTotal').textContent = filteredCruises.length;
   document.getElementById('statMin').textContent = pricesUSD.length ? '$' + Math.round(Math.min(...pricesUSD)).toLocaleString() : '—';
   document.getElementById('statMax').textContent = pricesUSD.length ? '$' + Math.round(Math.max(...pricesUSD)).toLocaleString() : '—';
@@ -604,16 +665,27 @@ function renderCards() {
 function cardHTML(c) {
   const line = c.cruise_line || '';
   const lineNames = { norwegian: 'Norwegian', royal_caribbean: 'Royal Caribbean', princess: 'Princess' };
-  const isRound = c.departurePort === c.arrivalPort || !c.arrivalPort;
-  const tripType = isRound
-    ? `<span class="trip-type round">🔄 Round</span>`
+  const round = isRoundTrip(c);
+  const tripBadge = round
+    ? `<span class="trip-type round">🔄 Round Trip</span>`
     : `<span class="trip-type oneway">→ One Way</span>`;
 
-  const dep = c.departurePort || '—';
-  const arr = c.arrivalPort || dep;
-  const route = isRound ? `🔄 Round trip · ${dep}` : `${dep} → ${arr}`;
+  const dep = parsePort(c.departurePort);
+  const arr = parsePort(c.arrivalPort);
+  const depDisplay = dep?.display || '—';
+  const arrDisplay = arr?.display || depDisplay;
 
-  // Price display
+  // Route line — clean, no repetition with destination
+  const routeLine = round
+    ? `🔄 Round trip from ${depDisplay}`
+    : `${depDisplay} → ${arrDisplay}`;
+
+  // Destination — only show if it's meaningfully different from port names
+  const dest = parseDest(c.destination);
+  const depName = dep?.name?.toLowerCase() || '';
+  const showDest = dest && !depName.includes(dest.toLowerCase()) && dest.length > 2;
+
+  // Price grid — exclude best_price cabin type to avoid duplication
   const priceTypes = [
     { key: 'interior_price', label: 'Interior' },
     { key: 'oceanview_price', label: 'Ocean View' },
@@ -622,27 +694,45 @@ function cardHTML(c) {
     { key: 'suite_price', label: 'Suite' },
   ];
 
+  // Find which cabin type IS the best price so we can highlight it instead of duplicating
+  let bestKey = null;
+  let bestVal = Infinity;
+  for (const pt of priceTypes) {
+    const v = parseFloat(c[pt.key]);
+    if (v > 0 && v < bestVal) { bestVal = v; bestKey = pt.key; }
+  }
+
   const priceHTML = priceTypes.map(pt => {
     const raw = c[pt.key];
     if (!raw) return '';
     const prices = convertPrice(raw, c.currency);
     if (!prices) return '';
-    return `<div class="price-item">
-      <div class="price-label">${pt.label}</div>
+    const isBest = pt.key === bestKey;
+    return `<div class="price-item${isBest ? ' price-item-best' : ''}">
+      <div class="price-label">${pt.label}${isBest ? ' ★' : ''}</div>
       ${displayCurrency === 'USD' ? `<div class="price-usd">$${Math.round(prices.usd).toLocaleString()}</div>` : ''}
       ${displayCurrency === 'EUR' ? `<div class="price-usd" style="color:var(--eur)">€${Math.round(prices.eur).toLocaleString()}</div>` : ''}
       ${displayCurrency === 'BOTH' ? `<div class="price-usd">$${Math.round(prices.usd).toLocaleString()}</div><div class="price-eur">€${Math.round(prices.eur).toLocaleString()}</div>` : ''}
     </div>`;
   }).filter(Boolean).join('');
 
+  // Best price summary row — only show if we have it, and it's the from-price callout
   const bestPrices = convertPrice(c.best_price, c.currency);
   const bestPriceHTML = bestPrices ? `
     <div class="best-price-row">
-      <div class="best-price-label">Best Price</div>
+      <div class="best-price-label">From</div>
       <div style="text-align:right">
-        ${displayCurrency === 'EUR' ? `<div class="best-price-value" style="color:var(--eur)">€${Math.round(bestPrices.eur).toLocaleString()}</div>` : `<div class="best-price-value">$${Math.round(bestPrices.usd).toLocaleString()}</div>`}
-        ${displayCurrency === 'BOTH' ? `<div class="best-price-value">$${Math.round(bestPrices.usd).toLocaleString()}</div><div class="best-price-eur">€${Math.round(bestPrices.eur).toLocaleString()}</div>` : ''}
-        <div style="font-size:10px;color:var(--muted);margin-top:2px;">orig. ${c.currency === 'EUR' ? '€' : '$'}${Math.round(parseFloat(c.best_price)).toLocaleString()} ${c.currency}</div>
+        ${displayCurrency === 'EUR'
+          ? `<div class="best-price-value" style="color:var(--eur)">€${Math.round(bestPrices.eur).toLocaleString()}</div>`
+          : `<div class="best-price-value">$${Math.round(bestPrices.usd).toLocaleString()}</div>`
+        }
+        ${displayCurrency === 'BOTH'
+          ? `<div class="best-price-value">$${Math.round(bestPrices.usd).toLocaleString()}</div><div class="best-price-eur">€${Math.round(bestPrices.eur).toLocaleString()}</div>`
+          : ''
+        }
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">
+          Native: ${c.currency === 'EUR' ? '€' : '$'}${Math.round(parseFloat(c.best_price)).toLocaleString()} ${c.currency}
+        </div>
       </div>
     </div>` : '';
 
@@ -653,22 +743,22 @@ function cardHTML(c) {
     catch { return d; }
   }
 
-  const dest = c.destination ? String(c.destination).replace(/[\[\]'"]/g,'').slice(0,40) : '';
   const nights = extractNights(c.duration_label);
+  const durationLabel = nights ? `${nights} nights` : (c.duration_label || '');
 
   return `<div class="cruise-card">
     <div class="card-header">
-      <div class="card-line">
-        <span class="line-badge ${line}">${lineNames[line] || line}</span>
-      </div>
-      ${tripType}
+      <span class="line-badge ${line}">${lineNames[line] || line}</span>
+      ${tripBadge}
     </div>
     <div class="card-title">${c.title || 'Cruise Voyage'}</div>
-    ${c.ship ? `<div class="card-ship">🚢 ${c.ship}</div>` : ''}
-    <div class="card-route">📍 ${route}</div>
-    ${dest ? `<div class="card-dest">🌊 ${dest}</div>` : ''}
+    <div class="card-meta-row">
+      ${c.ship ? `<span>🚢 ${c.ship}</span>` : ''}
+      ${durationLabel ? `<span>🌙 ${durationLabel}</span>` : ''}
+    </div>
+    <div class="card-route">📍 ${routeLine}</div>
+    ${showDest ? `<div class="card-dest">🌊 ${dest}</div>` : ''}
     <div class="card-dates">📅 ${fmtDate(c.departureDate)} → ${fmtDate(c.arrivalDate)}</div>
-    ${nights ? `<div class="card-duration">🌙 ${nights} nights</div>` : c.duration_label ? `<div class="card-duration">🌙 ${c.duration_label}</div>` : ''}
     <div class="price-section">
       ${priceHTML ? `<div class="price-grid">${priceHTML}</div>` : ''}
       ${bestPriceHTML}
