@@ -514,10 +514,14 @@ function buildPortLineMap() {
   portLineMap = {};
   for (const c of allCruises) {
     const dep = parsePort(c.departurePort);
-    if (!dep) continue;
-    const code = dep.code;
-    if (!portLineMap[code]) portLineMap[code] = new Set();
-    if (c.cruise_line) portLineMap[code].add(c.cruise_line);
+    if (!dep || !dep.code) continue;
+    const line = (c.cruise_line || '').trim().toLowerCase();
+    if (!line) continue;
+    // Store under both code and name so lookups always find a match
+    [dep.code.toUpperCase(), dep.name].filter(Boolean).forEach(key => {
+      if (!portLineMap[key]) portLineMap[key] = new Set();
+      portLineMap[key].add(line);
+    });
   }
 }
 
@@ -534,18 +538,27 @@ function updateLineTogglesForPort(portCode) {
   const lineToggles = document.querySelectorAll('.line-toggle[data-line]');
   const portHint = document.getElementById('portHint');
 
+  // Always fully enable all toggles first
+  lineToggles.forEach(btn => {
+    btn.classList.remove('unavailable');
+    btn.disabled = false;
+  });
+
   if (!portCode) {
-    // No port selected — enable all toggles, clear hint
-    lineToggles.forEach(btn => {
-      btn.classList.remove('unavailable');
-      btn.disabled = false;
-    });
     portHint.textContent = '';
     return;
   }
 
-  // Port selected — figure out which lines serve it
-  const availableLines = portLineMap[portCode] || new Set();
+  // Port selected — check portLineMap under code AND name
+  const availableLines = portLineMap[portCode.toUpperCase()]
+    || portLineMap[portCode]
+    || new Set();
+  if (!availableLines || availableLines.size === 0) {
+    // Map not ready or no data for this port yet — leave all enabled
+    portHint.textContent = '';
+    return;
+  }
+
   const depEl = document.getElementById('filterDep');
   const portName = depEl.options[depEl.selectedIndex]?.text || portCode;
   portHint.textContent = `— available from ${portName}`;
@@ -553,13 +566,9 @@ function updateLineTogglesForPort(portCode) {
   lineKeys.forEach(line => {
     const btn = document.querySelector(`[data-line="${line}"]`);
     if (!btn) return;
-    if (availableLines.has(line)) {
-      btn.classList.remove('unavailable');
-      btn.disabled = false;
-    } else {
+    if (!availableLines.has(line)) {
       btn.classList.add('unavailable');
       btn.disabled = true;
-      // If the currently active line becomes unavailable, reset to 'all'
       if (activeLine === line) {
         toggleLine('all', allBtn);
       }
@@ -592,32 +601,50 @@ const PORT_NAMES = {
   SYD:'Sydney', YOK:'Yokohama', GLS:'Galveston', PCV:'Puerto Chiapas',
   ROM:'Rome (Civitavecchia)', BCN:'Barcelona', LIS:'Lisbon', NYC:'New York',
   NOL:'New Orleans', HNL:'Honolulu', ANC:'Anchorage', VAN:'Vancouver',
+  CIV:'Rome (Civitavecchia)', CPH:'Copenhagen', PIR:'Athens (Piraeus)',
+  NAP:'Naples', VEN:'Venice', DXB:'Dubai', SIN:'Singapore',
+  HKG:'Hong Kong', OSL:'Oslo', ARN:'Stockholm', HEL:'Helsinki',
+  AMS:'Amsterdam', SOU:'Southampton', HAM:'Hamburg', MBJ:'Montego Bay',
+  NAS:'Nassau', GCM:'Grand Cayman', CZM:'Cozumel', PTY:'Panama City',
+  BAL:'Baltimore', NFK:'Norfolk', EWR:'New York (Bayonne)',
 };
 
 function parsePort(raw) {
-  if (!raw || raw === 'None' || raw === 'null') return null;
-  const s = String(raw).trim();
-  if (!s) return null;
+  if (!raw || raw === 'None' || raw === 'null' || raw === 'undefined') return null;
+  let s = String(raw).trim();
+  if (!s || s === '{}' || s === '[]') return null;
 
-  const nameMatch = s.match(/name['":\s]+([^,'"}\]]+)/i);
-  const codeMatch = s.match(/code['":\s]+([A-Z]{2,4})/i);
+  // ── Strategy 1: dict-style string {'name': 'Fort Lauderdale, Florida', 'code': 'FLL'}
+  const nameMatch = s.match(/['"]?name['"]?\s*[:=]\s*['"]?([^,'"}\]]+)/i);
+  const codeMatch = s.match(/['"]?code['"]?\s*[:=]\s*['"]?([A-Za-z]{2,5})/i);
   if (nameMatch || codeMatch) {
-    const rawName = (nameMatch?.[1] || '').trim().replace(/['"]/g,'');
+    const rawName = (nameMatch?.[1] || '').trim().replace(/['"{}[\]]/g, '');
     const code = (codeMatch?.[1] || '').trim().toUpperCase();
     const shortName = rawName ? rawName.split(',')[0].trim() : (PORT_NAMES[code] || code);
     const display = shortName && code && shortName !== code
-      ? `${shortName} (${code})`
-      : shortName || code;
+      ? `${shortName} (${code})` : shortName || code;
     return { display, code: code || shortName, name: shortName };
   }
 
-  if (/^[A-Z]{2,4}$/.test(s)) {
+  // ── Strategy 2: bare IATA/port code
+  if (/^[A-Z]{2,5}$/.test(s)) {
     const name = PORT_NAMES[s] || s;
     const display = PORT_NAMES[s] ? `${PORT_NAMES[s]} (${s})` : s;
     return { display, code: s, name };
   }
 
-  const shortName = s.split(',')[0].trim();
+  // ── Strategy 3: plain city name (possibly "Miami, FL" or "Fort Lauderdale")
+  const shortName = s.split(',')[0].trim().replace(/['"{}[\]]/g, '');
+  if (!shortName) return null;
+
+  // Try reverse-lookup by city name
+  const entry = Object.entries(PORT_NAMES).find(
+    ([, v]) => v.toLowerCase() === shortName.toLowerCase() ||
+               v.toLowerCase().startsWith(shortName.toLowerCase())
+  );
+  if (entry) return { display: `${entry[1]} (${entry[0]})`, code: entry[0], name: entry[1] };
+
+  // Fallback: use name as code (keeps all ports visible even unknown ones)
   return { display: shortName, code: shortName, name: shortName };
 }
 
@@ -682,10 +709,18 @@ function applyFilters() {
   const maxPrice = parseFloat(document.getElementById('filterMaxPrice').value) || null;
 
   filteredCruises = allCruises.filter(c => {
-    if (activeLine !== 'all' && c.cruise_line !== activeLine) return false;
+    const cruiseLine = (c.cruise_line || '').trim().toLowerCase();
+    if (activeLine !== 'all' && cruiseLine !== activeLine) return false;
 
-    const dep = parsePort(c.departurePort);
-    if (depFilter && dep?.code !== depFilter) return false;
+    if (depFilter) {
+      const dep = parsePort(c.departurePort);
+      if (!dep) return false;
+      // Match on code OR name — handles different formats across cruise lines
+      const codeMatch = dep.code && dep.code.toUpperCase() === depFilter.toUpperCase();
+      const nameMatch = dep.name && dep.name.toLowerCase() === depFilter.toLowerCase();
+      const displayMatch = dep.display && dep.display.toLowerCase().includes(depFilter.toLowerCase());
+      if (!codeMatch && !nameMatch && !displayMatch) return false;
+    }
 
     if (nights) {
       const n = extractNights(c.duration_label);
@@ -852,9 +887,8 @@ function cardHTML(c) {
 
 // ─── LINE TOGGLE ────────────────────────────────────────────
 function toggleLine(line, btn) {
-  // Don't activate an unavailable line
   if (btn && btn.classList.contains('unavailable')) return;
-  activeLine = line;
+  activeLine = line.trim().toLowerCase();
   document.querySelectorAll('.line-toggle').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   applyFilters();
