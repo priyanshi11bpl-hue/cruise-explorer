@@ -66,16 +66,16 @@
   .spin { animation: spin 1s linear infinite; display: inline-block; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* SCRAPED TIME */
-  #scraped-bar {
+  /* FETCHED TIME */
+  #fetched-bar {
     background: rgba(201,168,76,0.08);
     border-bottom: 1px solid rgba(201,168,76,0.15);
     padding: 8px 40px;
     display: flex; gap: 24px; flex-wrap: wrap;
     font-size: 12px; color: var(--muted);
   }
-  #scraped-bar span { display: flex; align-items: center; gap: 6px; }
-  #scraped-bar strong { color: var(--gold); font-weight: 500; }
+  #fetched-bar span { display: flex; align-items: center; gap: 6px; }
+  #fetched-bar strong { color: var(--gold); font-weight: 500; }
 
   /* STATUS BANNER */
   #status-banner {
@@ -98,6 +98,53 @@
     border-bottom: 1px solid var(--border);
   }
   .filters-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 16px; }
+
+  /* PRIMARY FILTERS ROW — Boarding Port + Date at top */
+  .primary-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* CRUISE LINE TOGGLES — dynamic based on port */
+  .cruise-line-section {
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cruise-line-section-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .cruise-line-section-label .port-hint {
+    color: var(--gold); font-weight: 500; text-transform: none; letter-spacing: 0;
+  }
+  .line-toggles { display: flex; gap: 8px; flex-wrap: wrap; }
+  .line-toggle {
+    padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500;
+    border: 1px solid var(--border); background: transparent; color: var(--muted);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .line-toggle.active { background: var(--teal); border-color: var(--teal); color: white; }
+  .line-toggle:disabled { opacity: 0.35; cursor: not-allowed; }
+  .line-toggle.unavailable { opacity: 0.3; cursor: not-allowed; text-decoration: line-through; }
+
+  /* SECONDARY FILTERS + SORT */
+  .secondary-filters-row {
+    display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; align-items: flex-end;
+  }
+  .sort-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
+  .sort-tabs { display: flex; gap: 6px; }
+  .sort-tab {
+    padding: 8px 14px; border-radius: 6px; font-size: 12px; font-weight: 500;
+    border: 1px solid var(--border); background: transparent; color: var(--muted);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .sort-tab.active { background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.4); color: var(--gold); }
+
   .filters-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -124,6 +171,16 @@
   }
   .filter-group select:focus, .filter-group input:focus { border-color: var(--teal); }
   .filter-group select option { background: var(--deep); }
+
+  /* Highlight primary filters */
+  .filter-group.primary-highlight label { color: var(--gold); }
+  .filter-group.primary-highlight select,
+  .filter-group.primary-highlight input {
+    border-color: rgba(201,168,76,0.25);
+  }
+  .filter-group.primary-highlight select:focus,
+  .filter-group.primary-highlight input:focus { border-color: var(--gold); }
+
   .filter-actions { display: flex; gap: 8px; align-items: flex-end; }
   .clear-btn {
     background: transparent; border: 1px solid var(--border); color: var(--muted);
@@ -138,24 +195,6 @@
     flex: 1;
   }
   .search-btn:hover { background: #0d8fa0; transform: translateY(-1px); }
-
-  /* LINE TOGGLES */
-  .line-toggles { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 0; }
-  .line-toggle {
-    padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500;
-    border: 1px solid var(--border); background: transparent; color: var(--muted);
-    cursor: pointer; transition: all 0.2s;
-  }
-  .line-toggle.active { background: var(--teal); border-color: var(--teal); color: white; }
-
-  /* SORT TABS */
-  .sort-tabs { display: flex; gap: 6px; }
-  .sort-tab {
-    padding: 8px 14px; border-radius: 6px; font-size: 12px; font-weight: 500;
-    border: 1px solid var(--border); background: transparent; color: var(--muted);
-    cursor: pointer; transition: all 0.2s;
-  }
-  .sort-tab.active { background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.4); color: var(--gold); }
 
   /* STATS BAR */
   .stats-bar {
@@ -290,12 +329,13 @@
 
   /* RESPONSIVE */
   @media (max-width: 768px) {
-    header, #scraped-bar, .filters-section, .stats-bar, .results-header, .cards-grid {
+    header, #fetched-bar, .filters-section, .stats-bar, .results-header, .cards-grid {
       padding-left: 16px; padding-right: 16px;
     }
     .cards-grid { grid-template-columns: 1fr; }
     .stats-bar { flex-wrap: wrap; }
     .stat-item { border-right: none; padding-right: 0; margin-right: 0; }
+    .primary-filters { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -314,10 +354,11 @@
   </div>
 </header>
 
-<div id="scraped-bar">
-  <span>🕐 Last scraped — <strong id="scraped-norwegian">—</strong> Norwegian</span>
-  <span>· <strong id="scraped-royal_caribbean">—</strong> Royal Caribbean</span>
-  <span>· <strong id="scraped-princess">—</strong> Princess</span>
+<!-- REPLACED "scraped" → "collected" -->
+<div id="fetched-bar">
+  <span>🕐 Last collected — <strong id="fetched-norwegian">—</strong> Norwegian</span>
+  <span>· <strong id="fetched-royal_caribbean">—</strong> Royal Caribbean</span>
+  <span>· <strong id="fetched-princess">—</strong> Princess</span>
 </div>
 
 <div id="status-banner"></div>
@@ -325,20 +366,41 @@
 <!-- FILTERS -->
 <div class="filters-section">
   <div class="filters-title">Filter & Sort</div>
-  <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:14px; align-items:center;">
-    <div>
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;">Cruise Line</div>
-      <div class="line-toggles">
-        <button class="line-toggle active" onclick="toggleLine('all',this)">All</button>
-        <button class="line-toggle" onclick="toggleLine('norwegian',this)">🚢 Norwegian</button>
-        <button class="line-toggle" onclick="toggleLine('royal_caribbean',this)">👑 Royal Caribbean</button>
-        <button class="line-toggle" onclick="toggleLine('princess',this)">👸 Princess</button>
-      </div>
+
+  <!-- PRIMARY FILTERS: Boarding Port + Departure Month FIRST -->
+  <div class="primary-filters">
+    <div class="filter-group primary-highlight">
+      <label>⚓ Boarding Port</label>
+      <select id="filterDep" onchange="onBoardingPortChange()">
+        <option value="">All Boarding Ports</option>
+      </select>
     </div>
+    <div class="filter-group primary-highlight">
+      <label>📅 Departure Month</label>
+      <input type="month" id="filterMonth" style="color-scheme:dark;" onchange="applyFilters()">
+    </div>
+  </div>
+
+  <!-- CRUISE LINE — dynamic based on selected boarding port -->
+  <div class="cruise-line-section">
+    <div class="cruise-line-section-label">
+      Cruise Line
+      <span class="port-hint" id="portHint"></span>
+    </div>
+    <div class="line-toggles" id="lineToggles">
+      <button class="line-toggle active" data-line="all" onclick="toggleLine('all',this)">All Lines</button>
+      <button class="line-toggle" data-line="norwegian" onclick="toggleLine('norwegian',this)">🚢 Norwegian</button>
+      <button class="line-toggle" data-line="royal_caribbean" onclick="toggleLine('royal_caribbean',this)">👑 Royal Caribbean</button>
+      <button class="line-toggle" data-line="princess" onclick="toggleLine('princess',this)">👸 Princess</button>
+    </div>
+  </div>
+
+  <!-- SORT + SECONDARY FILTERS -->
+  <div class="secondary-filters-row">
     <div>
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;">Sort By</div>
+      <div class="sort-label">Sort By</div>
       <div class="sort-tabs">
-        <button class="sort-tab active" onclick="setSort('price',this)">💰 Cheapest</button>
+        <button class="sort-tab active" onclick="setSort('price',this)">💰 Best Deal</button>
         <button class="sort-tab" onclick="setSort('date',this)">📅 Earliest</button>
         <button class="sort-tab" onclick="setSort('expensive',this)">💎 Premium First</button>
       </div>
@@ -347,43 +409,14 @@
 
   <div class="filters-grid">
     <div class="filter-group">
-      <label>Departure Port</label>
-      <select id="filterDep">
-        <option value="">All Ports</option>
-      </select>
-    </div>
-    <div class="filter-group">
-      <label>Arrival Port</label>
-      <select id="filterArr">
-        <option value="">All Ports</option>
-      </select>
-    </div>
-    <div class="filter-group">
-      <label>Destination</label>
-      <select id="filterDest">
-        <option value="">All Destinations</option>
-      </select>
-    </div>
-    <div class="filter-group">
-      <label>Trip Type</label>
-      <select id="filterTrip">
-        <option value="">All Types</option>
-        <option value="round">🔄 Round Trip</option>
-      </select>
-    </div>
-    <div class="filter-group">
-      <label>Duration (nights)</label>
+      <label>Duration</label>
       <select id="filterNights">
         <option value="">Any Duration</option>
-        <option value="1-5">Short (1–5 nights)</option>
-        <option value="6-9">Medium (6–9 nights)</option>
-        <option value="10-14">Long (10–14 nights)</option>
-        <option value="15+">Extended (15+ nights)</option>
+        <option value="3">3 Nights</option>
+        <option value="4">4 Nights</option>
+        <option value="7">7 Nights</option>
+        <option value="13">13 Nights</option>
       </select>
-    </div>
-    <div class="filter-group">
-      <label>Depart From (Month)</label>
-      <input type="month" id="filterMonth" style="color-scheme:dark;">
     </div>
     <div class="filter-group">
       <label>Max Price (USD)</label>
@@ -398,7 +431,7 @@
 
 <!-- STATS -->
 <div class="stats-bar">
-  <div class="stat-item"><div class="stat-label">Scraped Total</div><div class="stat-value" id="statFetched">—</div></div>
+  <div class="stat-item"><div class="stat-label">Total Collected</div><div class="stat-value" id="statFetched">—</div></div>
   <div class="stat-item"><div class="stat-label">Showing</div><div class="stat-value" id="statTotal">—</div></div>
   <div class="stat-item"><div class="stat-label">Lowest Price</div><div class="stat-value green" id="statMin">—</div></div>
   <div class="stat-item"><div class="stat-label">Highest Price</div><div class="stat-value red" id="statMax">—</div></div>
@@ -432,7 +465,7 @@
 
 <script>
 const API = 'https://cruisebot-func-asgrc7czhnhycdbe.centralindia-01.azurewebsites.net/api';
-const USD_EUR = 0.92; // approx rate — update as needed
+const USD_EUR = 0.92;
 const EUR_USD = 1 / USD_EUR;
 
 let allCruises = [];
@@ -442,13 +475,15 @@ let activeSort = 'price';
 let displayCurrency = 'BOTH';
 let pollInterval = null;
 
+// Map: portCode → Set of cruise_line strings available from that port
+let portLineMap = {};
+
 // ─── INIT ───────────────────────────────────────────────────
 window.onload = () => { loadCruises(); };
 
 async function loadCruises() {
   showSkeletons();
   try {
-    // Fetch cruises and stats in parallel
     const [cruiseRes, statsRes] = await Promise.all([
       fetch(`${API}/cruises?sort=${activeSort}`),
       fetch(`${API}/stats`)
@@ -458,12 +493,12 @@ async function loadCruises() {
 
     if (data.status === 'success') {
       allCruises = data.data || [];
-      updateScrapedTimes(data.last_scraped);
-      // Raw total from stats (includes cruises filtered out due to no price)
+      updateFetchedTimes(data.last_scraped || data.last_collected);
       if (statsData?.data) {
         const rawTotal = statsData.data.reduce((sum, s) => sum + (s.total_cruises || 0), 0);
         document.getElementById('statFetched').textContent = rawTotal;
       }
+      buildPortLineMap();
       populateFilters();
       applyFilters();
     } else {
@@ -474,13 +509,70 @@ async function loadCruises() {
   }
 }
 
-// ─── SCRAPED TIMES ──────────────────────────────────────────
-function updateScrapedTimes(last_scraped) {
-  if (!last_scraped) return;
-  for (const [line, ts] of Object.entries(last_scraped)) {
-    const el = document.getElementById(`scraped-${line}`);
+// ─── BUILD PORT → LINES MAP ─────────────────────────────────
+function buildPortLineMap() {
+  portLineMap = {};
+  for (const c of allCruises) {
+    const dep = parsePort(c.departurePort);
+    if (!dep) continue;
+    const code = dep.code;
+    if (!portLineMap[code]) portLineMap[code] = new Set();
+    if (c.cruise_line) portLineMap[code].add(c.cruise_line);
+  }
+}
+
+// ─── ON BOARDING PORT CHANGE ────────────────────────────────
+function onBoardingPortChange() {
+  const selectedPort = document.getElementById('filterDep').value;
+  updateLineTogglesForPort(selectedPort);
+  applyFilters();
+}
+
+function updateLineTogglesForPort(portCode) {
+  const allBtn = document.querySelector('[data-line="all"]');
+  const lineKeys = ['norwegian', 'royal_caribbean', 'princess'];
+  const lineToggles = document.querySelectorAll('.line-toggle[data-line]');
+  const portHint = document.getElementById('portHint');
+
+  if (!portCode) {
+    // No port selected — enable all toggles, clear hint
+    lineToggles.forEach(btn => {
+      btn.classList.remove('unavailable');
+      btn.disabled = false;
+    });
+    portHint.textContent = '';
+    return;
+  }
+
+  // Port selected — figure out which lines serve it
+  const availableLines = portLineMap[portCode] || new Set();
+  const depEl = document.getElementById('filterDep');
+  const portName = depEl.options[depEl.selectedIndex]?.text || portCode;
+  portHint.textContent = `— available from ${portName}`;
+
+  lineKeys.forEach(line => {
+    const btn = document.querySelector(`[data-line="${line}"]`);
+    if (!btn) return;
+    if (availableLines.has(line)) {
+      btn.classList.remove('unavailable');
+      btn.disabled = false;
+    } else {
+      btn.classList.add('unavailable');
+      btn.disabled = true;
+      // If the currently active line becomes unavailable, reset to 'all'
+      if (activeLine === line) {
+        toggleLine('all', allBtn);
+      }
+    }
+  });
+}
+
+// ─── FETCHED TIMES ──────────────────────────────────────────
+function updateFetchedTimes(last_collected) {
+  if (!last_collected) return;
+  for (const [line, ts] of Object.entries(last_collected)) {
+    const el = document.getElementById(`fetched-${line}`);
     if (el && ts) {
-      // ts format: 20260227_150000 → parse
       try {
         const y = ts.slice(0,4), mo = ts.slice(4,6), d = ts.slice(6,8);
         const h = ts.slice(9,11), mi = ts.slice(11,13);
@@ -494,8 +586,6 @@ function updateScrapedTimes(last_scraped) {
 }
 
 // ─── PORT PARSING ────────────────────────────────────────────
-// Ports can be: plain "Miami", or Python dict "{'name': 'Fort Lauderdale, Florida', 'code': 'FLL'}"
-// Also handles plain IATA codes like "JAX", "SJU"
 const PORT_NAMES = {
   JAX:'Jacksonville', MIA:'Miami', FLL:'Fort Lauderdale', LAX:'Los Angeles',
   SFO:'San Francisco', SEA:'Seattle', SJU:'San Juan', BNE:'Brisbane',
@@ -509,13 +599,11 @@ function parsePort(raw) {
   const s = String(raw).trim();
   if (!s) return null;
 
-  // Dict-style: {'name': 'Fort Lauderdale, Florida', 'code': 'FLL'}
   const nameMatch = s.match(/name['":\s]+([^,'"}\]]+)/i);
   const codeMatch = s.match(/code['":\s]+([A-Z]{2,4})/i);
   if (nameMatch || codeMatch) {
     const rawName = (nameMatch?.[1] || '').trim().replace(/['"]/g,'');
     const code = (codeMatch?.[1] || '').trim().toUpperCase();
-    // Use first part before comma ("Fort Lauderdale, Florida" → "Fort Lauderdale")
     const shortName = rawName ? rawName.split(',')[0].trim() : (PORT_NAMES[code] || code);
     const display = shortName && code && shortName !== code
       ? `${shortName} (${code})`
@@ -523,60 +611,46 @@ function parsePort(raw) {
     return { display, code: code || shortName, name: shortName };
   }
 
-  // Pure IATA code (2-4 uppercase letters)
   if (/^[A-Z]{2,4}$/.test(s)) {
     const name = PORT_NAMES[s] || s;
     const display = PORT_NAMES[s] ? `${PORT_NAMES[s]} (${s})` : s;
     return { display, code: s, name };
   }
 
-  // Plain city name like "Miami" or "Fort Lauderdale, Florida"
   const shortName = s.split(',')[0].trim();
   return { display: shortName, code: shortName, name: shortName };
 }
 
-// ─── DESTINATION PARSING ────────────────────────────────────
 function parseDest(raw) {
   if (!raw) return '';
   const s = String(raw);
-  // Handle Python list strings like "['Caribbean', 'Bahamas']"
   const cleaned = s.replace(/[\[\]]/g, '').replace(/['"]/g, '').trim();
-  // Take first destination if multiple
   return cleaned.split(',')[0].trim();
 }
 
-// ─── ROUND TRIP DETECTION ────────────────────────────────────
 function isRoundTrip(c) {
   const dep = parsePort(c.departurePort);
   const arr = parsePort(c.arrivalPort);
-  if (!arr || !dep) return true; // no arrival = assume round
-  // Same port = round trip
+  if (!arr || !dep) return true;
   if (dep.code === arr.code) return true;
   if (dep.name.toLowerCase() === arr.name.toLowerCase()) return true;
-  // No arrival info at all
   if (!c.arrivalPort || String(c.arrivalPort).trim() === '' || String(c.arrivalPort).trim() === 'None') return true;
   return false;
 }
 
 // ─── POPULATE FILTER DROPDOWNS ──────────────────────────────
 function populateFilters() {
-  const depMap = new Map(), arrMap = new Map(), dests = new Set();
+  const depMap = new Map();
   for (const c of allCruises) {
     const dep = parsePort(c.departurePort);
-    const arr = parsePort(c.arrivalPort);
-    // Add ALL ports to both maps regardless — user might want to filter by either
     if (dep) depMap.set(dep.code, dep.display);
-    if (arr) arrMap.set(arr.code, arr.display);  // ← was wrongly excluding same-as-dep ports
-    const d = parseDest(c.destination);
-    if (d) dests.add(d);
   }
-  fillSelect('filterDep', [...depMap.entries()].sort((a,b)=>a[1].localeCompare(b[1])), 'All Ports');
-  fillSelect('filterArr', [...arrMap.entries()].sort((a,b)=>a[1].localeCompare(b[1])), 'All Ports');
-  fillSelectPlain('filterDest', [...dests].sort(), 'All Destinations');
+  // Sort alphabetically by display name (city name first, human-readable)
+  const sortedPorts = [...depMap.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  fillSelect('filterDep', sortedPorts, 'All Boarding Ports');
 }
 
 function fillSelect(id, entries, placeholder) {
-  // entries = [[value, label], ...]
   const sel = document.getElementById(id);
   const current = sel.value;
   sel.innerHTML = `<option value="">${placeholder}</option>`;
@@ -603,9 +677,6 @@ function fillSelectPlain(id, items, placeholder) {
 // ─── FILTERS ────────────────────────────────────────────────
 function applyFilters() {
   const depFilter = document.getElementById('filterDep').value;
-  const arrFilter = document.getElementById('filterArr').value;
-  const dest = document.getElementById('filterDest').value;
-  const trip = document.getElementById('filterTrip').value;
   const nights = document.getElementById('filterNights').value;
   const month = document.getElementById('filterMonth').value;
   const maxPrice = parseFloat(document.getElementById('filterMaxPrice').value) || null;
@@ -614,26 +685,11 @@ function applyFilters() {
     if (activeLine !== 'all' && c.cruise_line !== activeLine) return false;
 
     const dep = parsePort(c.departurePort);
-    const arr = parsePort(c.arrivalPort);
-
     if (depFilter && dep?.code !== depFilter) return false;
-    if (arrFilter && arr?.code !== arrFilter) return false;
 
-    if (dest) {
-      const d = parseDest(c.destination);
-      if (!d.toLowerCase().includes(dest.toLowerCase())) return false;
-    }
-    if (trip) {
-      const round = isRoundTrip(c);
-      if (trip === 'round' && !round) return false;
-      if (trip === 'oneway' && round) return false;
-    }
     if (nights) {
       const n = extractNights(c.duration_label);
-      if (nights === '1-5' && !(n >= 1 && n <= 5)) return false;
-      if (nights === '6-9' && !(n >= 6 && n <= 9)) return false;
-      if (nights === '10-14' && !(n >= 10 && n <= 14)) return false;
-      if (nights === '15+' && !(n >= 15)) return false;
+      if (n !== parseInt(nights)) return false;
     }
     if (month && c.departureDate) {
       const depMonth = String(c.departureDate).slice(0,7);
@@ -646,7 +702,6 @@ function applyFilters() {
     return true;
   });
 
-  // sort
   if (activeSort === 'price') filteredCruises.sort((a,b) => (getPriceInUSD(a)||9999999) - (getPriceInUSD(b)||9999999));
   else if (activeSort === 'date') filteredCruises.sort((a,b) => String(a.departureDate||'').localeCompare(String(b.departureDate||'')));
   else if (activeSort === 'expensive') filteredCruises.sort((a,b) => (getPriceInUSD(b)||0) - (getPriceInUSD(a)||0));
@@ -665,7 +720,7 @@ function getPriceInUSD(c) {
   const p = parseFloat(c.best_price) || 0;
   if (!p) return null;
   if (c.currency === 'EUR') return p * EUR_USD;
-  return p; // already USD
+  return p;
 }
 
 function getPriceInEUR(c) {
@@ -708,27 +763,11 @@ function renderCards() {
 function cardHTML(c) {
   const line = c.cruise_line || '';
   const lineNames = { norwegian: 'Norwegian', royal_caribbean: 'Royal Caribbean', princess: 'Princess' };
-  const round = isRoundTrip(c);
-  const tripBadge = round
-    ? `<span class="trip-type round">🔄 Round Trip</span>`
-    : `<span class="trip-type oneway">→ One Way</span>`;
 
   const dep = parsePort(c.departurePort);
-  const arr = parsePort(c.arrivalPort);
   const depDisplay = dep?.display || '—';
-  const arrDisplay = arr?.display || depDisplay;
+  const routeLine = `🔄 Round trip from ${depDisplay}`;
 
-  // Route line — clean, no repetition with destination
-  const routeLine = round
-    ? `🔄 Round trip from ${depDisplay}`
-    : `${depDisplay} → ${arrDisplay}`;
-
-  // Destination — only show if it's meaningfully different from port names
-  const dest = parseDest(c.destination);
-  const depName = dep?.name?.toLowerCase() || '';
-  const showDest = dest && !depName.includes(dest.toLowerCase()) && dest.length > 2;
-
-  // Helper: render one price cell's amount(s) based on display currency
   function priceCell(raw, fromCurrency) {
     if (!raw) return '';
     const p = parseFloat(raw); if (!p) return '';
@@ -736,7 +775,6 @@ function cardHTML(c) {
     const eur = fromCurrency === 'USD' ? p * USD_EUR : p;
     if (displayCurrency === 'USD')  return `<div class="price-usd">$${Math.round(usd).toLocaleString()}</div>`;
     if (displayCurrency === 'EUR')  return `<div class="price-usd" style="color:var(--eur)">€${Math.round(eur).toLocaleString()}</div>`;
-    // BOTH — show USD primary, EUR secondary, NO duplication
     return `<div class="price-usd">$${Math.round(usd).toLocaleString()}</div><div class="price-eur">€${Math.round(eur).toLocaleString()}</div>`;
   }
 
@@ -748,7 +786,6 @@ function cardHTML(c) {
     { key: 'suite_price', label: 'Suite' },
   ];
 
-  // Find cheapest cabin to highlight
   let bestKey = null, bestVal = Infinity;
   for (const pt of priceTypes) {
     const v = parseFloat(c[pt.key]);
@@ -765,7 +802,6 @@ function cardHTML(c) {
     </div>`;
   }).filter(Boolean).join('');
 
-  // "From" row — single clean price, no duplication
   const bestRaw = parseFloat(c.best_price);
   const bestPriceHTML = bestRaw ? (() => {
     const usd = c.currency === 'EUR' ? bestRaw * EUR_USD : bestRaw;
@@ -785,7 +821,6 @@ function cardHTML(c) {
     </div>`;
   })() : '';
 
-  // Format date
   function fmtDate(d) {
     if (!d) return '—';
     try { return new Date(d).toLocaleDateString(undefined, {month:'short',day:'numeric',year:'numeric'}); }
@@ -798,7 +833,7 @@ function cardHTML(c) {
   return `<div class="cruise-card">
     <div class="card-header">
       <span class="line-badge ${line}">${lineNames[line] || line}</span>
-      ${tripBadge}
+      <span class="trip-type round">🔄 Round Trip</span>
     </div>
     <div class="card-title">${c.title || 'Cruise Voyage'}</div>
     <div class="card-meta-row">
@@ -806,7 +841,6 @@ function cardHTML(c) {
       ${durationLabel ? `<span>🌙 ${durationLabel}</span>` : ''}
     </div>
     <div class="card-route">📍 ${routeLine}</div>
-    ${showDest ? `<div class="card-dest">🌊 ${dest}</div>` : ''}
     <div class="card-dates">📅 ${fmtDate(c.departureDate)} → ${fmtDate(c.arrivalDate)}</div>
     <div class="price-section">
       ${priceHTML ? `<div class="price-grid">${priceHTML}</div>` : ''}
@@ -818,9 +852,11 @@ function cardHTML(c) {
 
 // ─── LINE TOGGLE ────────────────────────────────────────────
 function toggleLine(line, btn) {
+  // Don't activate an unavailable line
+  if (btn && btn.classList.contains('unavailable')) return;
   activeLine = line;
   document.querySelectorAll('.line-toggle').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  if (btn) btn.classList.add('active');
   applyFilters();
 }
 
@@ -838,9 +874,17 @@ function setCurrency(cur) {
 }
 
 function clearFilters() {
-  ['filterDep','filterArr','filterDest','filterTrip','filterNights'].forEach(id => document.getElementById(id).value = '');
+  ['filterDep', 'filterNights'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('filterMonth').value = '';
   document.getElementById('filterMaxPrice').value = '';
+  // Reset cruise line toggles
+  document.querySelectorAll('.line-toggle').forEach(b => {
+    b.classList.remove('unavailable', 'active');
+    b.disabled = false;
+  });
+  document.querySelector('[data-line="all"]').classList.add('active');
+  activeLine = 'all';
+  document.getElementById('portHint').textContent = '';
   applyFilters();
 }
 
@@ -850,7 +894,7 @@ async function triggerRefresh() {
   const icon = document.getElementById('refreshIcon');
   btn.disabled = true;
   icon.innerHTML = '<span class="spin">↻</span>';
-  showBanner('running', '⏳ Starting scrapers — this takes 3–8 minutes. Checking every 30s…');
+  showBanner('running', '⏳ Starting data collection — this takes 3–8 minutes. Checking every 30s…');
 
   try {
     await fetch(`${API}/refresh`, { method: 'POST' });
@@ -883,8 +927,7 @@ async function checkStatus() {
       resetRefreshBtn();
     }
 
-    // Update last-scraped even during poll
-    if (data.last_scraped) updateScrapedTimes(data.last_scraped);
+    if (data.last_scraped || data.last_collected) updateFetchedTimes(data.last_scraped || data.last_collected);
   } catch(e) {
     // keep polling silently
   }
