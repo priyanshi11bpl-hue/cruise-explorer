@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cruise Price Explorer</title>
+<title>Best Price for Cruise </title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -198,27 +198,58 @@
 
   /* STATS BAR */
   .stats-bar {
-    display: flex; gap: 0; padding: 0 40px;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
     border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.01);
   }
   .stat-item {
-    padding: 16px 32px 16px 0; margin-right: 32px;
+    padding: 14px 20px;
     border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    min-width: 0;
   }
   .stat-item:last-child { border-right: none; }
-  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
-  .stat-value { font-size: 22px; font-weight: 600; margin-top: 2px; }
+  .stat-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--muted); white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; width: 100%; margin-bottom: 4px;
+  }
+  .stat-value {
+    font-size: 20px; font-weight: 700; line-height: 1;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;
+  }
   .stat-value.green { color: #4ac994; }
   .stat-value.red { color: #ff7070; }
 
-  /* RESULTS COUNT + CONTROLS */
+  @media (max-width: 1100px) {
+    .stats-bar { grid-template-columns: repeat(4, 1fr); }
+    .stat-item:nth-child(4) { border-right: none; }
+    .stat-item:nth-child(5) { border-top: 1px solid var(--border); }
+    .stat-item:nth-child(6) { border-top: 1px solid var(--border); }
+    .stat-item:nth-child(7) { border-top: 1px solid var(--border); }
+    .stat-item:nth-child(8) { border-top: 1px solid var(--border); border-right: none; }
+  }
+  @media (max-width: 600px) {
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+    .stat-item { border-top: 1px solid var(--border); }
+    .stat-item:nth-child(odd) { border-right: 1px solid var(--border); }
+    .stat-item:nth-child(even) { border-right: none; }
+  }
+
+  /* RESULTS HEADER */
   .results-header {
-    padding: 16px 40px;
+    padding: 12px 40px;
     display: flex; align-items: center; justify-content: space-between;
     flex-wrap: wrap; gap: 12px;
+    background: rgba(255,255,255,0.015);
+    border-bottom: 1px solid var(--border);
   }
-  .results-count { font-size: 14px; color: var(--muted); }
-  .results-count strong { color: white; font-size: 16px; }
+  .results-count { font-size: 13px; color: var(--muted); display: flex; align-items: baseline; gap: 6px; }
+  .results-count strong { color: white; font-size: 20px; font-weight: 700; line-height: 1; }
   .controls-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
   /* CURRENCY TOGGLE */
@@ -327,14 +358,11 @@
   .skel { background: rgba(255,255,255,0.06); border-radius: 4px; animation: shimmer 1.5s infinite; }
   @keyframes shimmer { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
 
-  /* RESPONSIVE */
   @media (max-width: 768px) {
-    header, #fetched-bar, .filters-section, .stats-bar, .results-header, .cards-grid {
+    header, #fetched-bar, .filters-section, .results-header, .cards-grid {
       padding-left: 16px; padding-right: 16px;
     }
     .cards-grid { grid-template-columns: 1fr; }
-    .stats-bar { flex-wrap: wrap; }
-    .stat-item { border-right: none; padding-right: 0; margin-right: 0; }
     .primary-filters { grid-template-columns: 1fr; }
   }
 </style>
@@ -445,7 +473,7 @@
 <div class="results-header">
   <div class="results-count"><strong id="resultCount">0</strong> cruises found</div>
   <div class="controls-right">
-    <div style="font-size:12px;color:var(--muted);margin-right:4px;">Display currency:</div>
+    <div style="font-size:12px;color:var(--muted);">Display currency:</div>
     <div class="currency-toggle">
       <button class="currency-btn active" id="btnUSD" onclick="setCurrency('USD')">USD $</button>
       <button class="currency-btn" id="btnEUR" onclick="setCurrency('EUR')">EUR €</button>
