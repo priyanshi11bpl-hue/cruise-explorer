@@ -902,7 +902,7 @@ function cardHTML(c, pax) {
 
   const dep = parsePort(c.departurePort);
   const depDisplay = dep?.display || '—';
-  const routeLine = `🔄 Round trip from ${depDisplay}`;
+  const routeLine = `From ${depDisplay}`;
 
   function priceCell(raw, fromCurrency) {
     if (!raw) return '';
