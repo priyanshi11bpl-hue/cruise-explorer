@@ -433,6 +433,42 @@
         <option value="8">8 Passengers</option>
       </select>
     </div>
+    <div class="filter-group primary-highlight">
+      <label>🌍 Where to Go</label>
+      <select id="filterRegion">
+        <option value="">Any Destination</option>
+        <optgroup label="🌊 Americas">
+          <option value="caribbean">Caribbean</option>
+          <option value="bahamas">Bahamas</option>
+          <option value="mexico">Mexico</option>
+          <option value="bermuda">Bermuda</option>
+          <option value="canada_newengland">Canada &amp; New England</option>
+          <option value="alaska">Alaska</option>
+          <option value="hawaii">Hawaii</option>
+          <option value="south_america">South America</option>
+          <option value="panama_canal">Panama Canal</option>
+        </optgroup>
+        <optgroup label="🏛️ Europe">
+          <option value="mediterranean">Mediterranean</option>
+          <option value="northern_europe">Northern Europe</option>
+          <option value="british_isles">British Isles</option>
+          <option value="scandinavia">Scandinavia &amp; Norway</option>
+          <option value="baltic">Baltic Sea</option>
+        </optgroup>
+        <optgroup label="🌏 Asia &amp; Pacific">
+          <option value="asia">Asia</option>
+          <option value="australia_nz">Australia &amp; New Zealand</option>
+          <option value="south_pacific">South Pacific</option>
+          <option value="japan">Japan</option>
+        </optgroup>
+        <optgroup label="🌐 Other">
+          <option value="middle_east">Middle East</option>
+          <option value="africa">Africa</option>
+          <option value="transatlantic">Transatlantic</option>
+          <option value="world">World Cruise</option>
+        </optgroup>
+      </select>
+    </div>
     <div class="filter-group">
       <label>&nbsp;</label>
       <button class="primary-search-btn" onclick="applyFilters()">🔍 Search</button>
@@ -738,6 +774,41 @@ function applyFilters() {
   const nights = document.getElementById('filterNights').value;
   const month = document.getElementById('filterMonth').value;
   const pax = parseInt(document.getElementById('filterPax').value) || 1;
+  const region = document.getElementById('filterRegion').value;
+
+  // Region keyword map — matches against title, destination, itinerary fields
+  const REGION_KEYWORDS = {
+    caribbean: ['caribbean','carib','aruba','barbados','st thomas','st maarten','curaçao','curacao','jamaica','puerto rico','dominican','trinidad','antigua','grenada','martinique'],
+    bahamas: ['bahamas','nassau','grand bahama','paradise island'],
+    mexico: ['mexico','cozumel','cabo','mazatlan','ensenada','puerto vallarta','progreso','costa maya'],
+    bermuda: ['bermuda'],
+    canada_newengland: ['canada','new england','nova scotia','quebec','montreal','boston','portland','bar harbor','sydney'],
+    alaska: ['alaska','juneau','ketchikan','skagway','glacier','sitka','whittier','anchorage'],
+    hawaii: ['hawaii','honolulu','maui','kauai','hilo','oahu','kona'],
+    south_america: ['south america','argentina','brazil','chile','peru','buenos aires','rio','montevideo','valparaiso','ushuaia'],
+    panama_canal: ['panama','canal'],
+    mediterranean: ['mediterranean','italy','spain','france','greece','croatia','turkey','rome','barcelona','athens','venice','dubrovnik','santorini','naples','marseille','lisbon','porto'],
+    northern_europe: ['northern europe','north europe','amsterdam','bruges','antwerp','rotterdam'],
+    british_isles: ['british isles','ireland','scotland','england','wales','london','dublin','edinburgh','belfast','liverpool','southampton'],
+    scandinavia: ['scandinavia','norway','fjord','bergen','oslo','stavanger','flam','geiranger','tromso','nordkapp'],
+    baltic: ['baltic','stockholm','helsinki','tallinn','riga','st. petersburg','petersburg','copenhagen','gdansk'],
+    asia: ['asia','singapore','vietnam','thailand','cambodia','indonesia','malaysia','hong kong','shanghai','beijing','taipei','bali','phuket','bangkok'],
+    australia_nz: ['australia','new zealand','sydney','melbourne','brisbane','auckland','christchurch','wellington','hobart'],
+    south_pacific: ['south pacific','fiji','tahiti','bora bora','samoa','tonga','vanuatu','new caledonia'],
+    japan: ['japan','tokyo','osaka','kyoto','yokohama','hiroshima','nagasaki','okinawa'],
+    middle_east: ['middle east','dubai','abu dhabi','muscat','oman','jordan','aqaba','israel','haifa'],
+    africa: ['africa','morocco','casablanca','cape town','kenya','tanzania','madagascar','mauritius','reunion'],
+    transatlantic: ['transatlantic','trans-atlantic','transatlantic'],
+    world: ['world cruise','around the world','world voyage'],
+  };
+
+  function matchesRegion(c, regionKey) {
+    if (!regionKey) return true;
+    const keywords = REGION_KEYWORDS[regionKey] || [];
+    const haystack = [c.title, c.destination, c.itinerary, c.region, c.destinations]
+      .filter(Boolean).join(' ').toLowerCase();
+    return keywords.some(kw => haystack.includes(kw));
+  }
 
   filteredCruises = allCruises.filter(c => {
     const cruiseLine = (c.cruise_line || '').trim().toLowerCase();
@@ -760,6 +831,7 @@ function applyFilters() {
       const depMonth = String(c.departureDate).slice(0,7);
       if (depMonth !== month) return false;
     }
+    if (region && !matchesRegion(c, region)) return false;
     return true;
   });
 
@@ -837,7 +909,7 @@ function cardHTML(c, pax) {
     const p = parseFloat(raw); if (!p) return '';
     const usd = fromCurrency === 'EUR' ? p * EUR_USD * numPax : p * numPax;
     const eur = fromCurrency === 'USD' ? p * USD_EUR * numPax : p * numPax;
-    const paxLabel = numPax > 1 ? ` <span style="font-size:10px;color:var(--muted);">×${numPax}</span>` : '';
+    const paxLabel = numPax > 1 ? ` <span style="font-size:10px;color:var(--muted);">for ${numPax}</span>` : '';
     if (displayCurrency === 'USD')  return `<div class="price-usd">$${Math.round(usd).toLocaleString()}${paxLabel}</div>`;
     if (displayCurrency === 'EUR')  return `<div class="price-usd" style="color:var(--eur)">€${Math.round(eur).toLocaleString()}${paxLabel}</div>`;
     return `<div class="price-usd">$${Math.round(usd).toLocaleString()}${paxLabel}</div><div class="price-eur">€${Math.round(eur).toLocaleString()}</div>`;
@@ -901,7 +973,6 @@ function cardHTML(c, pax) {
   return `<div class="cruise-card">
     <div class="card-header">
       <span class="line-badge ${line}">${lineNames[line] || line}</span>
-      <span class="trip-type round">🔄 Round Trip</span>
     </div>
     <div class="card-title">${c.title || 'Cruise Voyage'}</div>
     <div class="card-meta-row">
@@ -944,6 +1015,7 @@ function clearFilters() {
   ['filterDep', 'filterNights'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('filterMonth').value = '';
   document.getElementById('filterPax').value = '2';
+  document.getElementById('filterRegion').value = '';
   document.querySelectorAll('.line-toggle').forEach(b => {
     b.classList.remove('unavailable', 'active');
     b.disabled = false;
