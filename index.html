@@ -7,378 +7,113 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --navy: #0a1628;
-    --deep: #0d1f3c;
-    --ocean: #1a3a5c;
-    --teal: #0e7a8a;
-    --gold: #c9a84c;
-    --foam: #e8f4f8;
-    --white: #ffffff;
-    --muted: #94aab8;
-    --card: rgba(255,255,255,0.04);
-    --border: rgba(255,255,255,0.08);
-    --eur: #4a9eff;
-    --usd: #4ac994;
+    --navy:#0a1628;--deep:#0d1f3c;--ocean:#1a3a5c;--teal:#0e7a8a;
+    --gold:#c9a84c;--white:#ffffff;--muted:#94aab8;
+    --card:rgba(255,255,255,0.04);--border:rgba(255,255,255,0.08);
+    --eur:#4a9eff;--usd:#4ac994;
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--navy);
-    color: var(--white);
-    min-height: 100vh;
-  }
-
-  /* HEADER */
-  header {
-    background: linear-gradient(135deg, var(--deep) 0%, var(--ocean) 100%);
-    border-bottom: 1px solid var(--border);
-    padding: 24px 40px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
-  }
-  .logo h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-  }
-  .logo h1 span { color: var(--gold); }
-  .logo p { color: var(--muted); font-size: 13px; margin-top: 2px; }
-  .header-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-  .live-badge {
-    display: flex; align-items: center; gap: 6px;
-    background: rgba(14,122,138,0.2); border: 1px solid rgba(14,122,138,0.4);
-    border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 500;
-  }
-  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; animation: pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
-  .refresh-btn {
-    background: var(--teal); border: none; color: white;
-    padding: 10px 20px; border-radius: 8px; font-family: 'DM Sans', sans-serif;
-    font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px;
-    transition: all 0.2s;
-  }
-  .refresh-btn:hover { background: #0d8fa0; transform: translateY(-1px); }
-  .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-  .spin { animation: spin 1s linear infinite; display: inline-block; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* FETCHED TIME */
-  #fetched-bar {
-    background: rgba(201,168,76,0.08);
-    border-bottom: 1px solid rgba(201,168,76,0.15);
-    padding: 8px 40px;
-    display: flex; gap: 24px; flex-wrap: wrap;
-    font-size: 12px; color: var(--muted);
-  }
-  #fetched-bar span { display: flex; align-items: center; gap: 6px; }
-  #fetched-bar strong { color: var(--gold); font-weight: 500; }
-
-  /* STATUS BANNER */
-  #status-banner {
-    display: none;
-    margin: 16px 40px 0;
-    padding: 12px 18px;
-    border-radius: 8px;
-    font-size: 13px;
-    border: 1px solid;
-  }
-  #status-banner.running { background: rgba(74,158,255,0.08); border-color: rgba(74,158,255,0.3); color: #7bc4ff; }
-  #status-banner.done    { background: rgba(74,201,148,0.08); border-color: rgba(74,201,148,0.3); color: #7de8b8; }
-  #status-banner.partial { background: rgba(201,168,76,0.08); border-color: rgba(201,168,76,0.3); color: var(--gold); }
-  #status-banner.failed  { background: rgba(255,100,100,0.08); border-color: rgba(255,100,100,0.3); color: #ff9090; }
-
-  /* FILTERS */
-  .filters-section {
-    padding: 24px 40px;
-    background: var(--deep);
-    border-bottom: 1px solid var(--border);
-  }
-  .filters-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 16px; }
-
-  /* PRIMARY FILTERS ROW — Boarding Port + Date + Pax + Search button */
-  .primary-filters {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 12px;
-    margin-bottom: 16px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border);
-    align-items: end;
-  }
-
-  /* CRUISE LINE TOGGLES — dynamic based on port */
-  .cruise-line-section {
-    margin-bottom: 14px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid var(--border);
-  }
-  .cruise-line-section-label {
-    font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .cruise-line-section-label .port-hint {
-    color: var(--gold); font-weight: 500; text-transform: none; letter-spacing: 0;
-  }
-  .line-toggles { display: flex; gap: 8px; flex-wrap: wrap; }
-  .line-toggle {
-    padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500;
-    border: 1px solid var(--border); background: transparent; color: var(--muted);
-    cursor: pointer; transition: all 0.2s;
-  }
-  .line-toggle.active { background: var(--teal); border-color: var(--teal); color: white; }
-  .line-toggle:disabled { opacity: 0.35; cursor: not-allowed; }
-  .line-toggle.unavailable { opacity: 0.3; cursor: not-allowed; text-decoration: line-through; }
-
-  /* SECONDARY FILTERS + SORT */
-  .secondary-filters-row {
-    display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; align-items: flex-end;
-  }
-  .sort-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
-  .sort-tabs { display: flex; gap: 6px; }
-  .sort-tab {
-    padding: 8px 14px; border-radius: 6px; font-size: 12px; font-weight: 500;
-    border: 1px solid var(--border); background: transparent; color: var(--muted);
-    cursor: pointer; transition: all 0.2s;
-  }
-  .sort-tab.active { background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.4); color: var(--gold); }
-
-  .filters-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 12px;
-    align-items: end;
-  }
-  .filter-group label {
-    display: block; font-size: 11px; color: var(--muted);
-    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;
-  }
-  .filter-group select, .filter-group input {
-    width: 100%; background: rgba(255,255,255,0.06);
-    border: 1px solid var(--border); border-radius: 8px;
-    color: white; padding: 9px 12px; font-family: 'DM Sans', sans-serif;
-    font-size: 13px; outline: none; cursor: pointer;
-    transition: border-color 0.2s;
-    -webkit-appearance: none; appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394aab8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: right 12px center;
-    padding-right: 32px;
-  }
-  .filter-group input {
-    background-image: none; padding-right: 12px;
-  }
-  .filter-group select:focus, .filter-group input:focus { border-color: var(--teal); }
-  .filter-group select option { background: var(--deep); }
-
-  /* Highlight primary filters */
-  .filter-group.primary-highlight label { color: var(--gold); }
-  .filter-group.primary-highlight select,
-  .filter-group.primary-highlight input {
-    border-color: rgba(201,168,76,0.25);
-  }
-  .filter-group.primary-highlight select:focus,
-  .filter-group.primary-highlight input:focus { border-color: var(--gold); }
-
-  /* Search button in primary row */
-  .primary-search-btn {
-    background: var(--teal); border: none; color: white;
-    padding: 10px 20px; border-radius: 8px; font-family: 'DM Sans', sans-serif;
-    font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap;
-    width: 100%; height: 38px;
-  }
-  .primary-search-btn:hover { background: #0d8fa0; transform: translateY(-1px); }
-
-  .filter-actions { display: flex; gap: 8px; align-items: flex-end; }
-  .clear-btn {
-    background: transparent; border: 1px solid var(--border); color: var(--muted);
-    padding: 9px 16px; border-radius: 8px; font-family: 'DM Sans', sans-serif;
-    font-size: 13px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
-  }
-  .clear-btn:hover { border-color: var(--muted); color: white; }
-
-  /* STATS BAR */
-  .stats-bar {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    border-bottom: 1px solid var(--border);
-    background: rgba(255,255,255,0.01);
-  }
-  .stat-item {
-    padding: 14px 20px;
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    min-width: 0;
-  }
-  .stat-item:last-child { border-right: none; }
-  .stat-label {
-    font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
-    color: var(--muted); white-space: nowrap; overflow: hidden;
-    text-overflow: ellipsis; width: 100%; margin-bottom: 4px;
-  }
-  .stat-value {
-    font-size: 20px; font-weight: 700; line-height: 1;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;
-  }
-  .stat-value.green { color: #4ac994; }
-  .stat-value.red { color: #ff7070; }
-
-  @media (max-width: 1100px) {
-    .stats-bar { grid-template-columns: repeat(4, 1fr); }
-    .stat-item:nth-child(4) { border-right: none; }
-    .stat-item:nth-child(5) { border-top: 1px solid var(--border); }
-    .stat-item:nth-child(6) { border-top: 1px solid var(--border); }
-    .stat-item:nth-child(7) { border-top: 1px solid var(--border); }
-    .stat-item:nth-child(8) { border-top: 1px solid var(--border); border-right: none; }
-  }
-  @media (max-width: 600px) {
-    .stats-bar { grid-template-columns: repeat(2, 1fr); }
-    .stat-item { border-top: 1px solid var(--border); }
-    .stat-item:nth-child(odd) { border-right: 1px solid var(--border); }
-    .stat-item:nth-child(even) { border-right: none; }
-  }
-
-  /* RESULTS HEADER */
-  .results-header {
-    padding: 12px 40px;
-    display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 12px;
-    background: rgba(255,255,255,0.015);
-    border-bottom: 1px solid var(--border);
-  }
-  .results-count { font-size: 13px; color: var(--muted); display: flex; align-items: baseline; gap: 6px; }
-  .results-count strong { color: white; font-size: 20px; font-weight: 700; line-height: 1; }
-  .controls-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-
-  /* CURRENCY TOGGLE */
-  .currency-toggle {
-    display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
-  }
-  .currency-btn {
-    padding: 7px 14px; font-size: 12px; font-weight: 600;
-    background: transparent; border: none; color: var(--muted); cursor: pointer;
-    transition: all 0.2s; font-family: 'DM Sans', sans-serif;
-  }
-  .currency-btn.active { background: var(--ocean); color: white; }
-
-  /* GRID */
-  .cards-grid {
-    padding: 0 40px 40px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 16px;
-  }
-
-  /* CARD */
-  .cruise-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    transition: all 0.2s;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-  .cruise-card::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, var(--teal), var(--gold));
-    opacity: 0; transition: opacity 0.2s;
-  }
-  .cruise-card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-2px); }
-  .cruise-card:hover::before { opacity: 1; }
-
-  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-  .card-line { display: flex; align-items: center; gap: 6px; }
-  .line-badge {
-    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
-    padding: 3px 8px; border-radius: 4px;
-  }
-  .line-badge.norwegian { background: rgba(14,122,138,0.25); color: #6dd4e0; }
-  .line-badge.royal_caribbean { background: rgba(74,158,255,0.2); color: #7dc4ff; }
-  .line-badge.princess { background: rgba(201,168,76,0.2); color: var(--gold); }
-
-  .trip-type {
-    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
-    padding: 3px 8px; border-radius: 4px;
-  }
-  .trip-type.round { background: rgba(255,255,255,0.08); color: var(--muted); }
-  .trip-type.oneway { background: rgba(74,201,148,0.15); color: #7de8b8; }
-
-  .card-title { font-family: 'Playfair Display', serif; font-size: 16px; line-height: 1.3; margin-bottom: 8px; }
-  .card-meta-row { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-bottom: 10px; flex-wrap: wrap; }
-  .card-ship { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
-
-  .card-route { font-size: 13px; color: #b0c8d8; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-  .card-dates { font-size: 12px; color: var(--muted); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
-  .card-duration { font-size: 12px; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
-  .card-dest { font-size: 12px; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
-
-  .price-section {
-    border-top: 1px solid var(--border);
-    padding-top: 14px;
-    margin-top: auto;
-    display: flex;
-    flex-direction: column;
-  }
-  .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-  .price-item { background: rgba(255,255,255,0.03); border-radius: 6px; padding: 8px 10px; }
-  .price-item-best { background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.25); }
-  .price-item-best .price-label { color: var(--gold); }
-  .price-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 3px; }
-  .price-usd { font-size: 15px; font-weight: 600; color: var(--usd); }
-  .price-eur { font-size: 12px; color: var(--eur); margin-top: 1px; opacity: 0.9; }
-  .price-na { font-size: 13px; color: rgba(255,255,255,0.2); }
-
-  .best-price-row {
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .best-price-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
-  .best-price-value { font-size: 20px; font-weight: 700; color: var(--gold); }
-  .best-price-eur { font-size: 13px; color: var(--eur); margin-top: 1px; }
-
-  .book-btn {
-    display: block;
-    margin-top: 12px;
-    width: 100%;
-    background: linear-gradient(135deg, var(--teal), #0d8fa0);
-    color: white; text-decoration: none; text-align: center;
-    padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 500;
-    border: none; cursor: pointer; font-family: 'DM Sans', sans-serif;
-    transition: all 0.2s;
-    box-sizing: border-box;
-  }
-  .book-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-
-  /* EMPTY / LOADING */
-  .empty-state {
-    grid-column: 1/-1; text-align: center; padding: 60px 20px;
-    color: var(--muted);
-  }
-  .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
-  .empty-state h3 { font-size: 18px; margin-bottom: 8px; color: white; }
-
-  /* LOADING SKELETON */
-  .skeleton-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px;
-  }
-  .skel { background: rgba(255,255,255,0.06); border-radius: 4px; animation: shimmer 1.5s infinite; }
-  @keyframes shimmer { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
-
-  @media (max-width: 768px) {
-    header, #fetched-bar, .filters-section, .results-header, .cards-grid {
-      padding-left: 16px; padding-right: 16px;
-    }
-    .cards-grid { grid-template-columns: 1fr; }
-    .primary-filters { grid-template-columns: 1fr; }
-  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);min-height:100vh;}
+  header{background:linear-gradient(135deg,var(--deep),var(--ocean));border-bottom:1px solid var(--border);padding:24px 40px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+  .logo h1{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;}
+  .logo h1 span{color:var(--gold);}
+  .logo p{color:var(--muted);font-size:13px;margin-top:2px;}
+  .header-right{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .live-badge{display:flex;align-items:center;gap:6px;background:rgba(14,122,138,0.2);border:1px solid rgba(14,122,138,0.4);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:500;}
+  .live-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.3)}}
+  .refresh-btn{background:var(--teal);border:none;color:white;padding:10px 20px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.2s;}
+  .refresh-btn:hover{background:#0d8fa0;transform:translateY(-1px);}
+  .refresh-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+  .spin{animation:spin 1s linear infinite;display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #fetched-bar{background:rgba(201,168,76,0.08);border-bottom:1px solid rgba(201,168,76,0.15);padding:8px 40px;display:flex;gap:24px;flex-wrap:wrap;font-size:12px;color:var(--muted);}
+  #fetched-bar span{display:flex;align-items:center;gap:6px;}
+  #fetched-bar strong{color:var(--gold);font-weight:500;}
+  #status-banner{display:none;margin:16px 40px 0;padding:12px 18px;border-radius:8px;font-size:13px;border:1px solid;}
+  #status-banner.running{background:rgba(74,158,255,0.08);border-color:rgba(74,158,255,0.3);color:#7bc4ff;}
+  #status-banner.done{background:rgba(74,201,148,0.08);border-color:rgba(74,201,148,0.3);color:#7de8b8;}
+  #status-banner.partial{background:rgba(201,168,76,0.08);border-color:rgba(201,168,76,0.3);color:var(--gold);}
+  #status-banner.failed{background:rgba(255,100,100,0.08);border-color:rgba(255,100,100,0.3);color:#ff9090;}
+  .filters-section{padding:24px 40px;background:var(--deep);border-bottom:1px solid var(--border);}
+  .filters-title{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:16px;}
+  .primary-filters{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);align-items:end;}
+  .filter-group label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+  .filter-group select,.filter-group input{width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:8px;color:white;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;cursor:pointer;transition:border-color 0.2s;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394aab8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+  .filter-group input{background-image:none;padding-right:12px;}
+  .filter-group select:focus,.filter-group input:focus{border-color:var(--teal);}
+  .filter-group select option{background:var(--deep);}
+  .filter-group.primary-highlight label{color:var(--gold);}
+  .filter-group.primary-highlight select,.filter-group.primary-highlight input{border-color:rgba(201,168,76,0.25);}
+  .filter-group.primary-highlight select:focus,.filter-group.primary-highlight input:focus{border-color:var(--gold);}
+  .cruise-line-section{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+  .cruise-line-section-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+  .cruise-line-section-label .port-hint{color:var(--gold);font-weight:500;text-transform:none;letter-spacing:0;}
+  .line-toggles{display:flex;gap:8px;flex-wrap:wrap;}
+  .line-toggle{padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.2s;}
+  .line-toggle.active{background:var(--teal);border-color:var(--teal);color:white;}
+  .line-toggle:disabled{opacity:0.35;cursor:not-allowed;}
+  .line-toggle.unavailable{opacity:0.3;cursor:not-allowed;text-decoration:line-through;}
+  .secondary-filters-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;align-items:flex-end;}
+  .sort-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;}
+  .sort-tabs{display:flex;gap:6px;}
+  .sort-tab{padding:8px 14px;border-radius:6px;font-size:12px;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.2s;}
+  .sort-tab.active{background:rgba(201,168,76,0.15);border-color:rgba(201,168,76,0.4);color:var(--gold);}
+  .filters-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;align-items:end;}
+  .primary-search-btn{background:var(--teal);border:none;color:white;padding:10px 20px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap;width:100%;height:38px;}
+  .primary-search-btn:hover{background:#0d8fa0;transform:translateY(-1px);}
+  .clear-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:9px 16px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+  .clear-btn:hover{border-color:var(--muted);color:white;}
+  .stats-bar{display:grid;grid-template-columns:repeat(8,1fr);border-bottom:1px solid var(--border);background:rgba(255,255,255,0.01);}
+  .stat-item{padding:14px 20px;border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;align-items:flex-start;min-width:0;}
+  .stat-item:last-child{border-right:none;}
+  .stat-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;margin-bottom:4px;}
+  .stat-value{font-size:20px;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;}
+  .stat-value.green{color:#4ac994;}.stat-value.red{color:#ff7070;}
+  .results-header{padding:12px 40px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;background:rgba(255,255,255,0.015);border-bottom:1px solid var(--border);}
+  .results-count{font-size:13px;color:var(--muted);display:flex;align-items:baseline;gap:6px;}
+  .results-count strong{color:white;font-size:20px;font-weight:700;line-height:1;}
+  .controls-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .currency-toggle{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .currency-btn{padding:7px 14px;font-size:12px;font-weight:600;background:transparent;border:none;color:var(--muted);cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+  .currency-btn.active{background:var(--ocean);color:white;}
+  .cards-grid{padding:0 40px 40px;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
+  .cruise-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all 0.2s;position:relative;overflow:hidden;display:flex;flex-direction:column;}
+  .cruise-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--teal),var(--gold));opacity:0;transition:opacity 0.2s;}
+  .cruise-card:hover{border-color:rgba(255,255,255,0.15);transform:translateY(-2px);}
+  .cruise-card:hover::before{opacity:1;}
+  .card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+  .line-badge{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;padding:3px 8px;border-radius:4px;}
+  .line-badge.norwegian{background:rgba(14,122,138,0.25);color:#6dd4e0;}
+  .line-badge.royal_caribbean{background:rgba(74,158,255,0.2);color:#7dc4ff;}
+  .line-badge.princess{background:rgba(201,168,76,0.2);color:var(--gold);}
+  .card-title{font-family:'Playfair Display',serif;font-size:16px;line-height:1.3;margin-bottom:8px;}
+  .card-meta-row{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-bottom:10px;flex-wrap:wrap;}
+  .card-route{font-size:13px;color:#b0c8d8;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+  .card-dates{font-size:12px;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+  .price-section{border-top:1px solid var(--border);padding-top:14px;margin-top:auto;display:flex;flex-direction:column;}
+  .price-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+  .price-item{background:rgba(255,255,255,0.03);border-radius:6px;padding:8px 10px;}
+  .price-item-best{background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25);}
+  .price-item-best .price-label{color:var(--gold);}
+  .price-label{font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:3px;}
+  .price-usd{font-size:15px;font-weight:600;color:var(--usd);}
+  .price-eur{font-size:12px;color:var(--eur);margin-top:1px;opacity:0.9;}
+  .best-price-row{display:flex;align-items:center;justify-content:space-between;}
+  .best-price-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+  .best-price-value{font-size:20px;font-weight:700;color:var(--gold);}
+  .best-price-eur{font-size:13px;color:var(--eur);margin-top:1px;}
+  .book-btn{display:block;margin-top:12px;width:100%;background:linear-gradient(135deg,var(--teal),#0d8fa0);color:white;text-decoration:none;text-align:center;padding:10px;border-radius:8px;font-size:13px;font-weight:500;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;box-sizing:border-box;}
+  .book-btn:hover{opacity:0.9;transform:translateY(-1px);}
+  .empty-state{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted);}
+  .empty-state .icon{font-size:48px;margin-bottom:16px;}
+  .empty-state h3{font-size:18px;margin-bottom:8px;color:white;}
+  .skeleton-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;}
+  .skel{background:rgba(255,255,255,0.06);border-radius:4px;animation:shimmer 1.5s infinite;}
+  @keyframes shimmer{0%,100%{opacity:0.4}50%{opacity:0.8}}
+  @media(max-width:1100px){.stats-bar{grid-template-columns:repeat(4,1fr);}.stat-item:nth-child(4){border-right:none;}.stat-item:nth-child(5),.stat-item:nth-child(6),.stat-item:nth-child(7),.stat-item:nth-child(8){border-top:1px solid var(--border);}.stat-item:nth-child(8){border-right:none;}}
+  @media(max-width:768px){header,#fetched-bar,.filters-section,.results-header,.cards-grid{padding-left:16px;padding-right:16px;}.cards-grid{grid-template-columns:1fr;}.primary-filters{grid-template-columns:1fr;}}
+  @media(max-width:600px){.stats-bar{grid-template-columns:repeat(2,1fr);}.stat-item{border-top:1px solid var(--border);}.stat-item:nth-child(odd){border-right:1px solid var(--border);}.stat-item:nth-child(even){border-right:none;}}
 </style>
 </head>
 <body>
@@ -390,7 +125,7 @@
   </div>
   <div class="header-right">
     <div class="live-badge"><span class="live-dot"></span> Azure Live Data</div>
-    <button class="refresh-btn" id="refreshBtn" onclick="triggerRefresh()">
+    <button class="refresh-btn" id="refreshBtn" onclick="RefreshModule.trigger()">
       <span id="refreshIcon">↻</span> Refresh Prices
     </button>
   </div>
@@ -401,18 +136,14 @@
   <span>· <strong id="fetched-royal_caribbean">—</strong> Royal Caribbean</span>
   <span>· <strong id="fetched-princess">—</strong> Princess</span>
 </div>
-
 <div id="status-banner"></div>
 
-<!-- FILTERS -->
 <div class="filters-section">
-  <div class="filters-title">Filter & Sort</div>
-
-  <!-- PRIMARY FILTERS: Boarding Port + Departure Month + Pax + Search Button -->
+  <div class="filters-title">Filter &amp; Sort</div>
   <div class="primary-filters">
     <div class="filter-group primary-highlight">
       <label>⚓ Boarding Port</label>
-      <select id="filterDep" onchange="onBoardingPortChange()">
+      <select id="filterDep" onchange="FiltersModule.onPortChange()">
         <option value="">All Boarding Ports</option>
       </select>
     </div>
@@ -450,6 +181,7 @@
         </optgroup>
         <optgroup label="🏛️ Europe">
           <option value="mediterranean">Mediterranean</option>
+          <option value="greek_islands">🏛️ Greek Islands</option>
           <option value="northern_europe">Northern Europe</option>
           <option value="british_isles">British Isles</option>
           <option value="scandinavia">Scandinavia &amp; Norway</option>
@@ -471,32 +203,29 @@
     </div>
     <div class="filter-group">
       <label>&nbsp;</label>
-      <button class="primary-search-btn" onclick="applyFilters()">🔍 Search</button>
+      <button class="primary-search-btn" onclick="FiltersModule.apply()">🔍 Search</button>
     </div>
   </div>
 
-  <!-- CRUISE LINE — dynamic based on selected boarding port -->
   <div class="cruise-line-section">
     <div class="cruise-line-section-label">
-      Cruise Line
-      <span class="port-hint" id="portHint"></span>
+      Cruise Line <span class="port-hint" id="portHint"></span>
     </div>
     <div class="line-toggles" id="lineToggles">
-      <button class="line-toggle active" data-line="all" onclick="toggleLine('all',this)">All Lines</button>
-      <button class="line-toggle" data-line="norwegian" onclick="toggleLine('norwegian',this)">🚢 Norwegian</button>
-      <button class="line-toggle" data-line="royal_caribbean" onclick="toggleLine('royal_caribbean',this)">👑 Royal Caribbean</button>
-      <button class="line-toggle" data-line="princess" onclick="toggleLine('princess',this)">👸 Princess</button>
+      <button class="line-toggle active"   data-line="all"             onclick="FiltersModule.toggleLine('all',this)">All Lines</button>
+      <button class="line-toggle"          data-line="norwegian"       onclick="FiltersModule.toggleLine('norwegian',this)">🚢 Norwegian</button>
+      <button class="line-toggle"          data-line="royal_caribbean" onclick="FiltersModule.toggleLine('royal_caribbean',this)">👑 Royal Caribbean</button>
+      <button class="line-toggle"          data-line="princess"        onclick="FiltersModule.toggleLine('princess',this)">👸 Princess</button>
     </div>
   </div>
 
-  <!-- SORT + SECONDARY FILTERS -->
   <div class="secondary-filters-row">
     <div>
       <div class="sort-label">Sort By</div>
       <div class="sort-tabs">
-        <button class="sort-tab active" onclick="setSort('price',this)">💰 Best Deal</button>
-        <button class="sort-tab" onclick="setSort('date',this)">📅 Earliest</button>
-        <button class="sort-tab" onclick="setSort('expensive',this)">💎 Premium First</button>
+        <button class="sort-tab active" onclick="FiltersModule.setSort('price',this)">💰 Best Deal</button>
+        <button class="sort-tab"        onclick="FiltersModule.setSort('date',this)">📅 Earliest</button>
+        <button class="sort-tab"        onclick="FiltersModule.setSort('expensive',this)">💎 Premium First</button>
       </div>
     </div>
   </div>
@@ -512,13 +241,12 @@
         <option value="13">13 Nights</option>
       </select>
     </div>
-    <div class="filter-group filter-actions" style="gap:8px;">
-      <button class="clear-btn" onclick="clearFilters()">✕ Clear Filters</button>
+    <div class="filter-group">
+      <button class="clear-btn" style="margin-top:17px" onclick="FiltersModule.clear()">✕ Clear Filters</button>
     </div>
   </div>
 </div>
 
-<!-- STATS -->
 <div class="stats-bar">
   <div class="stat-item"><div class="stat-label">Total Collected</div><div class="stat-value" id="statFetched">—</div></div>
   <div class="stat-item"><div class="stat-label">Showing</div><div class="stat-value" id="statTotal">—</div></div>
@@ -530,20 +258,18 @@
   <div class="stat-item"><div class="stat-label">👸 Princess</div><div class="stat-value" id="statPrincess">—</div></div>
 </div>
 
-<!-- RESULTS HEADER -->
 <div class="results-header">
   <div class="results-count"><strong id="resultCount">0</strong> cruises found</div>
   <div class="controls-right">
     <div style="font-size:12px;color:var(--muted);">Display currency:</div>
     <div class="currency-toggle">
-      <button class="currency-btn active" id="btnUSD" onclick="setCurrency('USD')">USD $</button>
-      <button class="currency-btn" id="btnEUR" onclick="setCurrency('EUR')">EUR €</button>
-      <button class="currency-btn" id="btnBOTH" onclick="setCurrency('BOTH')">Both</button>
+      <button class="currency-btn active" id="btnUSD"  onclick="CardsModule.setCurrency('USD')">USD $</button>
+      <button class="currency-btn"        id="btnEUR"  onclick="CardsModule.setCurrency('EUR')">EUR €</button>
+      <button class="currency-btn"        id="btnBOTH" onclick="CardsModule.setCurrency('BOTH')">Both</button>
     </div>
   </div>
 </div>
 
-<!-- CARDS -->
 <div class="cards-grid" id="cardsGrid">
   <div class="empty-state">
     <div class="icon">⚓</div>
@@ -553,561 +279,531 @@
 </div>
 
 <script>
-const API = 'https://cruisebot-func-asgrc7czhnhycdbe.centralindia-01.azurewebsites.net/api';
-const USD_EUR = 0.92;
-const EUR_USD = 1 / USD_EUR;
+/* ============================================================
+   MODULE 1 — CONFIG
+   API endpoint, exchange rates, port name lookup, and all
+   region keyword maps in one place. Edit here to add ports
+   or new destinations without touching any other module.
+============================================================ */
+const Config = (() => {
+  const API     = 'https://cruisebot-func-asgrc7czhnhycdbe.centralindia-01.azurewebsites.net/api';
+  const USD_EUR = 0.92;
+  const EUR_USD = 1 / USD_EUR;
 
-let allCruises = [];
-let filteredCruises = [];
-let activeLine = 'all';
-let activeSort = 'price';
-let displayCurrency = 'BOTH';
-let pollInterval = null;
-let hasSearched = false;
-
-// Map: portCode → Set of cruise_line strings available from that port
-let portLineMap = {};
-
-// ─── INIT ───────────────────────────────────────────────────
-window.onload = () => { loadCruisesData(); };
-
-async function loadCruisesData() {
-  try {
-    const [cruiseRes, statsRes] = await Promise.all([
-      fetch(`${API}/cruises?sort=${activeSort}`),
-      fetch(`${API}/stats`)
-    ]);
-    const data = await cruiseRes.json();
-    const statsData = await statsRes.json().catch(() => null);
-
-    if (data.status === 'success') {
-      allCruises = data.data || [];
-      updateFetchedTimes(data.last_scraped || data.last_collected);
-      if (statsData?.data) {
-        const rawTotal = statsData.data.reduce((sum, s) => sum + (s.total_cruises || 0), 0);
-        document.getElementById('statFetched').textContent = rawTotal;
-      }
-      buildPortLineMap();
-      populateFilters();
-      // Do NOT auto-render cards — wait for user to click Search
-    } else {
-      showEmpty('Could not load cruise data.');
-    }
-  } catch(e) {
-    showEmpty('API unreachable — check Function App status.');
-  }
-}
-
-// ─── BUILD PORT → LINES MAP ─────────────────────────────────
-function buildPortLineMap() {
-  portLineMap = {};
-  for (const c of allCruises) {
-    const dep = parsePort(c.departurePort);
-    if (!dep || !dep.code) continue;
-    const line = (c.cruise_line || '').trim().toLowerCase();
-    if (!line) continue;
-    [dep.code.toUpperCase(), dep.name].filter(Boolean).forEach(key => {
-      if (!portLineMap[key]) portLineMap[key] = new Set();
-      portLineMap[key].add(line);
-    });
-  }
-}
-
-// ─── ON BOARDING PORT CHANGE ────────────────────────────────
-function onBoardingPortChange() {
-  const selectedPort = document.getElementById('filterDep').value;
-  updateLineTogglesForPort(selectedPort);
-}
-
-function updateLineTogglesForPort(portCode) {
-  const allBtn = document.querySelector('[data-line="all"]');
-  const lineKeys = ['norwegian', 'royal_caribbean', 'princess'];
-  const lineToggles = document.querySelectorAll('.line-toggle[data-line]');
-  const portHint = document.getElementById('portHint');
-
-  lineToggles.forEach(btn => {
-    btn.classList.remove('unavailable');
-    btn.disabled = false;
-  });
-
-  if (!portCode) {
-    portHint.textContent = '';
-    return;
-  }
-
-  const availableLines = portLineMap[portCode.toUpperCase()]
-    || portLineMap[portCode]
-    || new Set();
-  if (!availableLines || availableLines.size === 0) {
-    portHint.textContent = '';
-    return;
-  }
-
-  const depEl = document.getElementById('filterDep');
-  const portName = depEl.options[depEl.selectedIndex]?.text || portCode;
-  portHint.textContent = `— available from ${portName}`;
-
-  lineKeys.forEach(line => {
-    const btn = document.querySelector(`[data-line="${line}"]`);
-    if (!btn) return;
-    if (!availableLines.has(line)) {
-      btn.classList.add('unavailable');
-      btn.disabled = true;
-      if (activeLine === line) {
-        toggleLine('all', allBtn);
-      }
-    }
-  });
-}
-
-// ─── FETCHED TIMES ──────────────────────────────────────────
-function updateFetchedTimes(last_collected) {
-  if (!last_collected) return;
-  for (const [line, ts] of Object.entries(last_collected)) {
-    const el = document.getElementById(`fetched-${line}`);
-    if (el && ts) {
-      try {
-        const y = ts.slice(0,4), mo = ts.slice(4,6), d = ts.slice(6,8);
-        const h = ts.slice(9,11), mi = ts.slice(11,13);
-        const dt = new Date(`${y}-${mo}-${d}T${h}:${mi}:00Z`);
-        el.textContent = isNaN(dt) ? ts : dt.toLocaleString(undefined, {
-          month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', timeZoneName:'short'
-        });
-      } catch { el.textContent = ts; }
-    }
-  }
-}
-
-// ─── PORT PARSING ────────────────────────────────────────────
-const PORT_NAMES = {
-  JAX:'Jacksonville', MIA:'Miami', FLL:'Fort Lauderdale', LAX:'Los Angeles',
-  SFO:'San Francisco', SEA:'Seattle', SJU:'San Juan', BNE:'Brisbane',
-  SYD:'Sydney', YOK:'Yokohama', GLS:'Galveston', PCV:'Puerto Chiapas',
-  ROM:'Rome (Civitavecchia)', BCN:'Barcelona', LIS:'Lisbon', NYC:'New York',
-  NOL:'New Orleans', HNL:'Honolulu', ANC:'Anchorage', VAN:'Vancouver',
-  CIV:'Rome (Civitavecchia)', CPH:'Copenhagen', PIR:'Athens (Piraeus)',
-  NAP:'Naples', VEN:'Venice', DXB:'Dubai', SIN:'Singapore',
-  HKG:'Hong Kong', OSL:'Oslo', ARN:'Stockholm', HEL:'Helsinki',
-  AMS:'Amsterdam', SOU:'Southampton', HAM:'Hamburg', MBJ:'Montego Bay',
-  NAS:'Nassau', GCM:'Grand Cayman', CZM:'Cozumel', PTY:'Panama City',
-  BAL:'Baltimore', NFK:'Norfolk', EWR:'New York (Bayonne)',
-};
-
-function parsePort(raw) {
-  if (!raw || raw === 'None' || raw === 'null' || raw === 'undefined') return null;
-  let s = String(raw).trim();
-  if (!s || s === '{}' || s === '[]') return null;
-
-  const nameMatch = s.match(/['"]?name['"]?\s*[:=]\s*['"]?([^,'"}\]]+)/i);
-  const codeMatch = s.match(/['"]?code['"]?\s*[:=]\s*['"]?([A-Za-z]{2,5})/i);
-  if (nameMatch || codeMatch) {
-    const rawName = (nameMatch?.[1] || '').trim().replace(/['"{}[\]]/g, '');
-    const code = (codeMatch?.[1] || '').trim().toUpperCase();
-    const shortName = rawName ? rawName.split(',')[0].trim() : (PORT_NAMES[code] || code);
-    const display = shortName && code && shortName !== code
-      ? `${shortName} (${code})` : shortName || code;
-    return { display, code: code || shortName, name: shortName };
-  }
-
-  if (/^[A-Z]{2,5}$/.test(s)) {
-    const name = PORT_NAMES[s] || s;
-    const display = PORT_NAMES[s] ? `${PORT_NAMES[s]} (${s})` : s;
-    return { display, code: s, name };
-  }
-
-  const shortName = s.split(',')[0].trim().replace(/['"{}[\]]/g, '');
-  if (!shortName) return null;
-
-  const entry = Object.entries(PORT_NAMES).find(
-    ([, v]) => v.toLowerCase() === shortName.toLowerCase() ||
-               v.toLowerCase().startsWith(shortName.toLowerCase())
-  );
-  if (entry) return { display: `${entry[1]} (${entry[0]})`, code: entry[0], name: entry[1] };
-
-  return { display: shortName, code: shortName, name: shortName };
-}
-
-function parseDest(raw) {
-  if (!raw) return '';
-  const s = String(raw);
-  const cleaned = s.replace(/[\[\]]/g, '').replace(/['"]/g, '').trim();
-  return cleaned.split(',')[0].trim();
-}
-
-function isRoundTrip(c) {
-  const dep = parsePort(c.departurePort);
-  const arr = parsePort(c.arrivalPort);
-  if (!arr || !dep) return true;
-  if (dep.code === arr.code) return true;
-  if (dep.name.toLowerCase() === arr.name.toLowerCase()) return true;
-  if (!c.arrivalPort || String(c.arrivalPort).trim() === '' || String(c.arrivalPort).trim() === 'None') return true;
-  return false;
-}
-
-// ─── POPULATE FILTER DROPDOWNS ──────────────────────────────
-function populateFilters() {
-  const depMap = new Map();
-  for (const c of allCruises) {
-    const dep = parsePort(c.departurePort);
-    if (dep) depMap.set(dep.code, dep.display);
-  }
-  const sortedPorts = [...depMap.entries()].sort((a, b) => a[1].localeCompare(b[1]));
-  fillSelect('filterDep', sortedPorts, 'All Boarding Ports');
-}
-
-function fillSelect(id, entries, placeholder) {
-  const sel = document.getElementById(id);
-  const current = sel.value;
-  sel.innerHTML = `<option value="">${placeholder}</option>`;
-  entries.forEach(([val, label]) => {
-    const o = document.createElement('option');
-    o.value = val; o.textContent = label;
-    if (val === current) o.selected = true;
-    sel.appendChild(o);
-  });
-}
-
-// ─── FILTERS — only run when Search is clicked ──────────────
-function applyFilters() {
-  hasSearched = true;
-  const depFilter = document.getElementById('filterDep').value;
-  const nights = document.getElementById('filterNights').value;
-  const month = document.getElementById('filterMonth').value;
-  const pax = parseInt(document.getElementById('filterPax').value) || 1;
-  const region = document.getElementById('filterRegion').value;
-
-  // Region keyword map — matches against title, destination, itinerary fields
-  const REGION_KEYWORDS = {
-    caribbean: ['caribbean','carib','aruba','barbados','st thomas','st maarten','curaçao','curacao','jamaica','puerto rico','dominican','trinidad','antigua','grenada','martinique'],
-    bahamas: ['bahamas','nassau','grand bahama','paradise island'],
-    mexico: ['mexico','cozumel','cabo','mazatlan','ensenada','puerto vallarta','progreso','costa maya'],
-    bermuda: ['bermuda'],
-    canada_newengland: ['canada','new england','nova scotia','quebec','montreal','boston','portland','bar harbor','sydney'],
-    alaska: ['alaska','juneau','ketchikan','skagway','glacier','sitka','whittier','anchorage'],
-    hawaii: ['hawaii','honolulu','maui','kauai','hilo','oahu','kona'],
-    south_america: ['south america','argentina','brazil','chile','peru','buenos aires','rio','montevideo','valparaiso','ushuaia'],
-    panama_canal: ['panama','canal'],
-    mediterranean: ['mediterranean','italy','spain','france','greece','croatia','turkey','rome','barcelona','athens','venice','dubrovnik','santorini','naples','marseille','lisbon','porto'],
-    northern_europe: ['northern europe','north europe','amsterdam','bruges','antwerp','rotterdam'],
-    british_isles: ['british isles','ireland','scotland','england','wales','london','dublin','edinburgh','belfast','liverpool','southampton'],
-    scandinavia: ['scandinavia','norway','fjord','bergen','oslo','stavanger','flam','geiranger','tromso','nordkapp'],
-    baltic: ['baltic','stockholm','helsinki','tallinn','riga','st. petersburg','petersburg','copenhagen','gdansk'],
-    asia: ['asia','singapore','vietnam','thailand','cambodia','indonesia','malaysia','hong kong','shanghai','beijing','taipei','bali','phuket','bangkok'],
-    australia_nz: ['australia','new zealand','sydney','melbourne','brisbane','auckland','christchurch','wellington','hobart'],
-    south_pacific: ['south pacific','fiji','tahiti','bora bora','samoa','tonga','vanuatu','new caledonia'],
-    japan: ['japan','tokyo','osaka','kyoto','yokohama','hiroshima','nagasaki','okinawa'],
-    middle_east: ['middle east','dubai','abu dhabi','muscat','oman','jordan','aqaba','israel','haifa'],
-    africa: ['africa','morocco','casablanca','cape town','kenya','tanzania','madagascar','mauritius','reunion'],
-    transatlantic: ['transatlantic','trans-atlantic','transatlantic'],
-    world: ['world cruise','around the world','world voyage'],
+  const LINE_NAMES = {
+    norwegian:'Norwegian', royal_caribbean:'Royal Caribbean', princess:'Princess'
   };
 
-  function matchesRegion(c, regionKey) {
-    if (!regionKey) return true;
-    const keywords = REGION_KEYWORDS[regionKey] || [];
-    const haystack = [c.title, c.destination, c.itinerary, c.region, c.destinations]
-      .filter(Boolean).join(' ').toLowerCase();
-    return keywords.some(kw => haystack.includes(kw));
+  // IATA code → human-readable city name (display labels only, not a filter source)
+  const PORT_NAMES = {
+    JAX:'Jacksonville',MIA:'Miami',FLL:'Fort Lauderdale',LAX:'Los Angeles',
+    SFO:'San Francisco',SEA:'Seattle',SJU:'San Juan',BNE:'Brisbane',
+    SYD:'Sydney',YOK:'Yokohama',GLS:'Galveston',ROM:'Rome (Civitavecchia)',
+    BCN:'Barcelona',LIS:'Lisbon',NYC:'New York',NOL:'New Orleans',
+    HNL:'Honolulu',ANC:'Anchorage',VAN:'Vancouver',CIV:'Rome (Civitavecchia)',
+    CPH:'Copenhagen',PIR:'Athens (Piraeus)',NAP:'Naples',VEN:'Venice',
+    DXB:'Dubai',SIN:'Singapore',HKG:'Hong Kong',OSL:'Oslo',ARN:'Stockholm',
+    HEL:'Helsinki',AMS:'Amsterdam',SOU:'Southampton',HAM:'Hamburg',
+    MBJ:'Montego Bay',NAS:'Nassau',GCM:'Grand Cayman',CZM:'Cozumel',
+    PTY:'Panama City',BAL:'Baltimore',NFK:'Norfolk',EWR:'New York (Bayonne)',
+    ATH:'Athens (Piraeus)',DBV:'Dubrovnik',SPU:'Split',CFU:'Corfu',
+    HER:'Heraklion (Crete)',RHO:'Rhodes',MYK:'Mykonos',
+  };
+
+  // REGION_KEYWORDS — maps "Where to Go" dropdown value → words to match in cruise data.
+  // FIX: Added greek_islands as its own key. Also added greek/greek isles to mediterranean
+  // so Norwegian and Royal Caribbean results (which use MEDITERRANEAN destination code)
+  // also appear when filtering by Greek Islands.
+  const REGION_KEYWORDS = {
+    caribbean:         ['caribbean','aruba','barbados','st thomas','st maarten','curacao','curaçao','jamaica','puerto rico','dominican','trinidad','antigua','grenada','martinique'],
+    bahamas:           ['bahamas','nassau','grand bahama'],
+    mexico:            ['mexico','cozumel','cabo','mazatlan','ensenada','puerto vallarta','progreso','costa maya'],
+    bermuda:           ['bermuda'],
+    canada_newengland: ['canada','new england','nova scotia','quebec','montreal','boston','portland','bar harbor'],
+    alaska:            ['alaska','juneau','ketchikan','skagway','glacier','sitka','whittier','anchorage'],
+    hawaii:            ['hawaii','honolulu','maui','kauai','hilo','oahu','kona'],
+    south_america:     ['south america','argentina','brazil','chile','peru','buenos aires','rio','montevideo','valparaiso','ushuaia'],
+    panama_canal:      ['panama','canal'],
+    // Mediterranean includes Greek keywords so Norwegian/RC Mediterranean results show up too
+    mediterranean:     ['mediterranean','italy','spain','france','greece','greek','greek isles','greek islands','croatia','turkey','rome','barcelona','athens','venice','dubrovnik','santorini','naples','marseille','lisbon','civitavecchia','piraeus','mykonos','rhodes','corfu','crete'],
+    // Greek Islands: dedicated filter — catches Princess "Greek Isles" / "Greece" destination text
+    greek_islands:     ['greek','greek isles','greek islands','greece','santorini','mykonos','rhodes','corfu','crete','heraklion','piraeus','athens','zakynthos','lefkada','kefalonia','patmos','kos','lesbos','skiathos'],
+    northern_europe:   ['northern europe','north europe','amsterdam','bruges','antwerp','rotterdam'],
+    british_isles:     ['british isles','ireland','scotland','england','wales','london','dublin','edinburgh','belfast','liverpool','southampton'],
+    scandinavia:       ['scandinavia','norway','fjord','bergen','oslo','stavanger','flam','geiranger','tromso','nordkapp'],
+    baltic:            ['baltic','stockholm','helsinki','tallinn','riga','st. petersburg','petersburg','copenhagen','gdansk'],
+    asia:              ['asia','singapore','vietnam','thailand','cambodia','indonesia','malaysia','hong kong','shanghai','beijing','taipei','bali','phuket','bangkok'],
+    australia_nz:      ['australia','new zealand','sydney','melbourne','brisbane','auckland','christchurch','wellington','hobart'],
+    south_pacific:     ['south pacific','fiji','tahiti','bora bora','samoa','tonga','vanuatu','new caledonia'],
+    japan:             ['japan','tokyo','osaka','kyoto','yokohama','hiroshima','nagasaki','okinawa'],
+    middle_east:       ['middle east','dubai','abu dhabi','muscat','oman','jordan','aqaba','israel','haifa'],
+    africa:            ['africa','morocco','casablanca','cape town','kenya','tanzania','madagascar','mauritius'],
+    transatlantic:     ['transatlantic','trans-atlantic'],
+    world:             ['world cruise','around the world','world voyage'],
+  };
+
+  return { API, USD_EUR, EUR_USD, LINE_NAMES, PORT_NAMES, REGION_KEYWORDS };
+})();
+
+
+/* ============================================================
+   MODULE 2 — STATE
+   Single source of truth. All modules read/write state here.
+============================================================ */
+const State = (() => {
+  let _allCruises=[],_filtered=[],_activeLine='all',_sort='price',
+      _currency='BOTH',_searched=false,_portMap={};
+  return {
+    get allCruises(){return _allCruises;},     set allCruises(v){_allCruises=v;},
+    get filteredCruises(){return _filtered;},  set filteredCruises(v){_filtered=v;},
+    get activeLine(){return _activeLine;},     set activeLine(v){_activeLine=v;},
+    get activeSort(){return _sort;},           set activeSort(v){_sort=v;},
+    get displayCurrency(){return _currency;},  set displayCurrency(v){_currency=v;},
+    get hasSearched(){return _searched;},      set hasSearched(v){_searched=v;},
+    get portLineMap(){return _portMap;},       set portLineMap(v){_portMap=v;},
+  };
+})();
+
+
+/* ============================================================
+   MODULE 3 — PORT UTILS
+   Parses the three different port formats Apify returns and
+   builds the port→cruise-line availability lookup map.
+============================================================ */
+const PortUtils = (() => {
+
+  function parsePort(raw) {
+    if (!raw || raw==='None'||raw==='null'||raw==='undefined') return null;
+    let s = String(raw).trim();
+    if (!s||s==='{}'||s==='[]') return null;
+    // Dict-like: {'name':'Barcelona','code':'BCN'}
+    const nm = s.match(/['"]?name['"]?\s*[:=]\s*['"]?([^,'"}\]]+)/i);
+    const cm = s.match(/['"]?code['"]?\s*[:=]\s*['"]?([A-Za-z]{2,5})/i);
+    if (nm||cm) {
+      const rawName = (nm?.[1]||'').trim().replace(/['"{}[\]]/g,'');
+      const code    = (cm?.[1]||'').trim().toUpperCase();
+      const short   = rawName ? rawName.split(',')[0].trim() : (Config.PORT_NAMES[code]||code);
+      const display = short&&code&&short!==code ? `${short} (${code})` : short||code;
+      return {display, code:code||short, name:short};
+    }
+    // Plain IATA code
+    if (/^[A-Z]{2,5}$/.test(s)) {
+      const name = Config.PORT_NAMES[s]||s;
+      return {display: Config.PORT_NAMES[s]?`${name} (${s})`:s, code:s, name};
+    }
+    // Plain city string
+    const short = s.split(',')[0].trim().replace(/['"{}[\]]/g,'');
+    if (!short) return null;
+    const entry = Object.entries(Config.PORT_NAMES).find(
+      ([,v])=>v.toLowerCase()===short.toLowerCase()||v.toLowerCase().startsWith(short.toLowerCase())
+    );
+    if (entry) return {display:`${entry[1]} (${entry[0]})`, code:entry[0], name:entry[1]};
+    return {display:short, code:short, name:short};
   }
 
-  filteredCruises = allCruises.filter(c => {
-    const cruiseLine = (c.cruise_line || '').trim().toLowerCase();
-    if (activeLine !== 'all' && cruiseLine !== activeLine) return false;
-
-    if (depFilter) {
-      const dep = parsePort(c.departurePort);
-      if (!dep) return false;
-      const codeMatch = dep.code && dep.code.toUpperCase() === depFilter.toUpperCase();
-      const nameMatch = dep.name && dep.name.toLowerCase() === depFilter.toLowerCase();
-      const displayMatch = dep.display && dep.display.toLowerCase().includes(depFilter.toLowerCase());
-      if (!codeMatch && !nameMatch && !displayMatch) return false;
+  function buildPortLineMap() {
+    const map = {};
+    for (const c of State.allCruises) {
+      const dep  = parsePort(c.departurePort);
+      if (!dep?.code) continue;
+      const line = (c.cruise_line||'').trim().toLowerCase();
+      if (!line) continue;
+      [dep.code.toUpperCase(), dep.name].filter(Boolean).forEach(k=>{
+        if (!map[k]) map[k]=new Set();
+        map[k].add(line);
+      });
     }
-
-    if (nights) {
-      const n = extractNights(c.duration_label);
-      if (n !== parseInt(nights)) return false;
-    }
-    if (month && c.departureDate) {
-      const depMonth = String(c.departureDate).slice(0,7);
-      if (depMonth !== month) return false;
-    }
-    if (region && !matchesRegion(c, region)) return false;
-    return true;
-  });
-
-  if (activeSort === 'price') filteredCruises.sort((a,b) => (getPriceInUSD(a)||9999999) - (getPriceInUSD(b)||9999999));
-  else if (activeSort === 'date') filteredCruises.sort((a,b) => String(a.departureDate||'').localeCompare(String(b.departureDate||'')));
-  else if (activeSort === 'expensive') filteredCruises.sort((a,b) => (getPriceInUSD(b)||0) - (getPriceInUSD(a)||0));
-
-  updateStats();
-  renderCards(pax);
-}
-
-function extractNights(label) {
-  if (!label) return 0;
-  const m = String(label).match(/(\d+)/);
-  return m ? parseInt(m[1]) : 0;
-}
-
-function getPriceInUSD(c) {
-  const p = parseFloat(c.best_price) || 0;
-  if (!p) return null;
-  if (c.currency === 'EUR') return p * EUR_USD;
-  return p;
-}
-
-function getPriceInEUR(c) {
-  const p = parseFloat(c.best_price) || 0;
-  if (!p) return null;
-  if (c.currency === 'USD') return p * USD_EUR;
-  return p;
-}
-
-function convertPrice(amount, fromCurrency) {
-  if (!amount) return null;
-  const a = parseFloat(amount);
-  if (!a) return null;
-  return fromCurrency === 'EUR' ? { usd: a * EUR_USD, eur: a } : { usd: a, eur: a * USD_EUR };
-}
-
-// ─── STATS ──────────────────────────────────────────────────
-function updateStats() {
-  const pricesUSD = filteredCruises.map(c => getPriceInUSD(c)).filter(Boolean);
-  document.getElementById('statTotal').textContent = filteredCruises.length;
-  document.getElementById('statMin').textContent = pricesUSD.length ? '$' + Math.round(Math.min(...pricesUSD)).toLocaleString() : '—';
-  document.getElementById('statMax').textContent = pricesUSD.length ? '$' + Math.round(Math.max(...pricesUSD)).toLocaleString() : '—';
-  document.getElementById('statAvg').textContent = pricesUSD.length ? '$' + Math.round(pricesUSD.reduce((a,b)=>a+b,0)/pricesUSD.length).toLocaleString() : '—';
-  document.getElementById('statNorwegian').textContent = filteredCruises.filter(c => c.cruise_line === 'norwegian').length;
-  document.getElementById('statRoyal').textContent = filteredCruises.filter(c => c.cruise_line === 'royal_caribbean').length;
-  document.getElementById('statPrincess').textContent = filteredCruises.filter(c => c.cruise_line === 'princess').length;
-  document.getElementById('resultCount').textContent = filteredCruises.length;
-}
-
-// ─── RENDER CARDS ───────────────────────────────────────────
-function renderCards(pax) {
-  const grid = document.getElementById('cardsGrid');
-  if (!hasSearched) return;
-  if (!filteredCruises.length) {
-    grid.innerHTML = `<div class="empty-state"><div class="icon">🔍</div><h3>No cruises match your filters</h3><p>Try adjusting or clearing your filters</p></div>`;
-    return;
-  }
-  const numPax = pax || parseInt(document.getElementById('filterPax').value) || 1;
-  grid.innerHTML = filteredCruises.map(c => cardHTML(c, numPax)).join('');
-}
-
-function cardHTML(c, pax) {
-  const line = c.cruise_line || '';
-  const lineNames = { norwegian: 'Norwegian', royal_caribbean: 'Royal Caribbean', princess: 'Princess' };
-  const numPax = pax || 1;
-
-  const dep = parsePort(c.departurePort);
-  const depDisplay = dep?.display || '—';
-  const routeLine = `From ${depDisplay}`;
-
-  function priceCell(raw, fromCurrency) {
-    if (!raw) return '';
-    const p = parseFloat(raw); if (!p) return '';
-    const usd = fromCurrency === 'EUR' ? p * EUR_USD * numPax : p * numPax;
-    const eur = fromCurrency === 'USD' ? p * USD_EUR * numPax : p * numPax;
-    const paxLabel = numPax > 1 ? ` <span style="font-size:10px;color:var(--muted);">for ${numPax}</span>` : '';
-    if (displayCurrency === 'USD')  return `<div class="price-usd">$${Math.round(usd).toLocaleString()}${paxLabel}</div>`;
-    if (displayCurrency === 'EUR')  return `<div class="price-usd" style="color:var(--eur)">€${Math.round(eur).toLocaleString()}${paxLabel}</div>`;
-    return `<div class="price-usd">$${Math.round(usd).toLocaleString()}${paxLabel}</div><div class="price-eur">€${Math.round(eur).toLocaleString()}</div>`;
+    State.portLineMap = map;
   }
 
-  const priceTypes = [
-    { key: 'interior_price', label: 'Interior' },
-    { key: 'oceanview_price', label: 'Ocean View' },
-    { key: 'balcony_price', label: 'Balcony' },
-    { key: 'minisuite_price', label: 'Mini Suite' },
-    { key: 'suite_price', label: 'Suite' },
+  return {parsePort, buildPortLineMap};
+})();
+
+
+/* ============================================================
+   MODULE 4 — PRICE UTILS
+   Currency conversion and small formatting helpers shared
+   by both the filters and the card renderer.
+============================================================ */
+const PriceUtils = (() => {
+  const getPriceInUSD = c => {
+    const p=parseFloat(c.best_price)||0;
+    return p ? (c.currency==='EUR' ? p*Config.EUR_USD : p) : null;
+  };
+  const extractNights = label => {
+    if (!label) return 0;
+    const m=String(label).match(/(\d+)/);
+    return m?parseInt(m[1]):0;
+  };
+  const fmtDate = d => {
+    if (!d) return '—';
+    try{return new Date(d).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});}
+    catch{return d;}
+  };
+  return {getPriceInUSD, extractNights, fmtDate};
+})();
+
+
+/* ============================================================
+   MODULE 5 — STATS MODULE
+   Updates the 8-cell stats bar and the results count label.
+============================================================ */
+const StatsModule = (() => {
+  const $ = id => document.getElementById(id);
+
+  function update() {
+    const cs = State.filteredCruises;
+    const px = cs.map(c=>PriceUtils.getPriceInUSD(c)).filter(Boolean);
+    $('statTotal').textContent     = cs.length;
+    $('statMin').textContent       = px.length ? '$'+Math.round(Math.min(...px)).toLocaleString() : '—';
+    $('statMax').textContent       = px.length ? '$'+Math.round(Math.max(...px)).toLocaleString() : '—';
+    $('statAvg').textContent       = px.length ? '$'+Math.round(px.reduce((a,b)=>a+b,0)/px.length).toLocaleString() : '—';
+    $('statNorwegian').textContent = cs.filter(c=>c.cruise_line==='norwegian').length;
+    $('statRoyal').textContent     = cs.filter(c=>c.cruise_line==='royal_caribbean').length;
+    $('statPrincess').textContent  = cs.filter(c=>c.cruise_line==='princess').length;
+    $('resultCount').textContent   = cs.length;
+  }
+
+  function reset() {
+    ['statTotal','statMin','statMax','statAvg','statNorwegian','statRoyal','statPrincess']
+      .forEach(id => $(id).textContent='—');
+    $('resultCount').textContent='0';
+  }
+
+  function setTotalCollected(n) { $('statFetched').textContent=n; }
+
+  function updateFetchedTimes(lc) {
+    if (!lc) return;
+    for (const [line,ts] of Object.entries(lc)) {
+      const el=$(`fetched-${line}`);
+      if (!el||!ts) continue;
+      try {
+        const dt=new Date(`${ts.slice(0,4)}-${ts.slice(4,6)}-${ts.slice(6,8)}T${ts.slice(9,11)}:${ts.slice(11,13)}:00Z`);
+        el.textContent=isNaN(dt)?ts:dt.toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
+      } catch{el.textContent=ts;}
+    }
+  }
+
+  return {update, reset, setTotalCollected, updateFetchedTimes};
+})();
+
+
+/* ============================================================
+   MODULE 6 — CARDS MODULE
+   Renders cruise cards and handles the currency toggle.
+   All card HTML is built here in _buildCard().
+============================================================ */
+const CardsModule = (() => {
+  const PRICE_TYPES = [
+    {key:'interior_price',  label:'Interior'},
+    {key:'oceanview_price', label:'Ocean View'},
+    {key:'balcony_price',   label:'Balcony'},
+    {key:'minisuite_price', label:'Mini Suite'},
+    {key:'suite_price',     label:'Suite'},
   ];
 
-  let bestKey = null, bestVal = Infinity;
-  for (const pt of priceTypes) {
-    const v = parseFloat(c[pt.key]);
-    if (v > 0 && v < bestVal) { bestVal = v; bestKey = pt.key; }
+  function setCurrency(cur) {
+    State.displayCurrency=cur;
+    ['USD','EUR','BOTH'].forEach(c=>
+      document.getElementById('btn'+c).classList.toggle('active',c===cur)
+    );
+    if (State.hasSearched) render();
   }
 
-  const priceHTML = priceTypes.map(pt => {
-    const cell = priceCell(c[pt.key], c.currency);
-    if (!cell) return '';
-    const isBest = pt.key === bestKey;
-    return `<div class="price-item${isBest ? ' price-item-best' : ''}">
-      <div class="price-label">${pt.label}${isBest ? ' ★' : ''}</div>
-      ${cell}
-    </div>`;
-  }).filter(Boolean).join('');
-
-  const bestRaw = parseFloat(c.best_price);
-  const bestPriceHTML = bestRaw ? (() => {
-    const usdPP = c.currency === 'EUR' ? bestRaw * EUR_USD : bestRaw;
-    const eurPP = c.currency === 'USD' ? bestRaw * USD_EUR : bestRaw;
-    const usdTotal = usdPP * numPax;
-    const eurTotal = eurPP * numPax;
-    const paxNote = numPax > 1 ? ` (${numPax} pax)` : ' (per person)';
-    let mainPrice = '';
-    if (displayCurrency === 'USD')  mainPrice = `<div class="best-price-value">$${Math.round(usdTotal).toLocaleString()}</div>`;
-    else if (displayCurrency === 'EUR') mainPrice = `<div class="best-price-value" style="color:var(--eur)">€${Math.round(eurTotal).toLocaleString()}</div>`;
-    else mainPrice = `<div class="best-price-value">$${Math.round(usdTotal).toLocaleString()}</div><div class="best-price-eur">€${Math.round(eurTotal).toLocaleString()}</div>`;
-    return `<div class="best-price-row">
-      <div class="best-price-label">From${paxNote}</div>
-      <div style="text-align:right">
-        ${mainPrice}
-        <div style="font-size:10px;color:var(--muted);margin-top:2px;">
-          Listed as ${c.currency === 'EUR' ? '€' : '$'}${Math.round(bestRaw).toLocaleString()} ${c.currency}/person
-        </div>
-      </div>
-    </div>`;
-  })() : '';
-
-  function fmtDate(d) {
-    if (!d) return '—';
-    try { return new Date(d).toLocaleDateString(undefined, {month:'short',day:'numeric',year:'numeric'}); }
-    catch { return d; }
+  function render() {
+    const grid=document.getElementById('cardsGrid');
+    if (!State.hasSearched) return;
+    if (!State.filteredCruises.length) {
+      grid.innerHTML='<div class="empty-state"><div class="icon">🔍</div><h3>No cruises match your filters</h3><p>Try adjusting or clearing your filters</p></div>';
+      return;
+    }
+    const pax=parseInt(document.getElementById('filterPax').value)||1;
+    grid.innerHTML=State.filteredCruises.map(c=>_buildCard(c,pax)).join('');
   }
 
-  const nights = extractNights(c.duration_label);
-  const durationLabel = nights ? `${nights} nights` : (c.duration_label || '');
-
-  return `<div class="cruise-card">
-    <div class="card-header">
-      <span class="line-badge ${line}">${lineNames[line] || line}</span>
-    </div>
-    <div class="card-title">${c.title || 'Cruise Voyage'}</div>
-    <div class="card-meta-row">
-      ${c.ship ? `<span>🚢 ${c.ship}</span>` : ''}
-      ${durationLabel ? `<span>🌙 ${durationLabel}</span>` : ''}
-    </div>
-    <div class="card-route">📍 ${routeLine}</div>
-    <div class="card-dates">📅 ${fmtDate(c.departureDate)} → ${fmtDate(c.arrivalDate)}</div>
-    <div class="price-section">
-      ${priceHTML ? `<div class="price-grid">${priceHTML}</div>` : ''}
-      ${bestPriceHTML}
-      ${c.booking_url ? `<a href="${c.booking_url}" target="_blank" class="book-btn">Book Now →</a>` : ''}
-    </div>
-  </div>`;
-}
-
-// ─── LINE TOGGLE ────────────────────────────────────────────
-function toggleLine(line, btn) {
-  if (btn && btn.classList.contains('unavailable')) return;
-  activeLine = line.trim().toLowerCase();
-  document.querySelectorAll('.line-toggle').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  if (hasSearched) applyFilters();
-}
-
-function setSort(sort, btn) {
-  activeSort = sort;
-  document.querySelectorAll('.sort-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  if (hasSearched) applyFilters();
-}
-
-function setCurrency(cur) {
-  displayCurrency = cur;
-  ['USD','EUR','BOTH'].forEach(c => document.getElementById('btn'+c).classList.toggle('active', c === cur));
-  if (hasSearched) renderCards();
-}
-
-function clearFilters() {
-  ['filterDep', 'filterNights'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('filterMonth').value = '';
-  document.getElementById('filterPax').value = '2';
-  document.getElementById('filterRegion').value = '';
-  document.querySelectorAll('.line-toggle').forEach(b => {
-    b.classList.remove('unavailable', 'active');
-    b.disabled = false;
-  });
-  document.querySelector('[data-line="all"]').classList.add('active');
-  activeLine = 'all';
-  document.getElementById('portHint').textContent = '';
-  hasSearched = false;
-  document.getElementById('cardsGrid').innerHTML = `<div class="empty-state"><div class="icon">⚓</div><h3>Set your filters and click "Search" to find cruises</h3><p>Or click "Refresh Prices" to load the latest data first</p></div>`;
-  document.getElementById('statTotal').textContent = '—';
-  document.getElementById('statMin').textContent = '—';
-  document.getElementById('statMax').textContent = '—';
-  document.getElementById('statAvg').textContent = '—';
-  document.getElementById('statNorwegian').textContent = '—';
-  document.getElementById('statRoyal').textContent = '—';
-  document.getElementById('statPrincess').textContent = '—';
-  document.getElementById('resultCount').textContent = '0';
-}
-
-// ─── REFRESH ────────────────────────────────────────────────
-async function triggerRefresh() {
-  const btn = document.getElementById('refreshBtn');
-  const icon = document.getElementById('refreshIcon');
-  btn.disabled = true;
-  icon.innerHTML = '<span class="spin">↻</span>';
-  showBanner('running', '⏳ Starting data collection — this takes 3–8 minutes. Checking every 30s…');
-
-  try {
-    await fetch(`${API}/refresh`, { method: 'POST' });
-    startPolling();
-  } catch(e) {
-    showBanner('failed', '❌ Could not start refresh: ' + e.message);
-    resetRefreshBtn();
+  function showEmpty(msg) {
+    document.getElementById('cardsGrid').innerHTML=`<div class="empty-state"><div class="icon">⚠️</div><h3>${msg}</h3></div>`;
   }
-}
 
-function startPolling() {
-  clearInterval(pollInterval);
-  pollInterval = setInterval(checkStatus, 30000);
-  checkStatus();
-}
+  function showDefault() {
+    document.getElementById('cardsGrid').innerHTML=`<div class="empty-state"><div class="icon">⚓</div><h3>Set your filters and click "Search" to find cruises</h3><p>Or click "Refresh Prices" to load the latest data first</p></div>`;
+  }
 
-async function checkStatus() {
-  try {
-    const res = await fetch(`${API}/refresh-status`);
-    const data = await res.json();
-    const status = data.status;
-    showBanner(status, data.message || status);
+  function _priceCell(raw, fromCurrency, numPax) {
+    const p=parseFloat(raw); if(!p) return '';
+    const usd=(fromCurrency==='EUR'?p*Config.EUR_USD:p)*numPax;
+    const eur=(fromCurrency==='USD'?p*Config.USD_EUR:p)*numPax;
+    const pl=numPax>1?` <span style="font-size:10px;color:var(--muted)">for ${numPax}</span>`:'';
+    if (State.displayCurrency==='USD')  return `<div class="price-usd">$${Math.round(usd).toLocaleString()}${pl}</div>`;
+    if (State.displayCurrency==='EUR')  return `<div class="price-usd" style="color:var(--eur)">€${Math.round(eur).toLocaleString()}${pl}</div>`;
+    return `<div class="price-usd">$${Math.round(usd).toLocaleString()}${pl}</div><div class="price-eur">€${Math.round(eur).toLocaleString()}</div>`;
+  }
 
-    if (status === 'done' || status === 'partial') {
-      clearInterval(pollInterval);
-      resetRefreshBtn();
-      await loadCruisesData();
-    } else if (status === 'failed') {
-      clearInterval(pollInterval);
-      resetRefreshBtn();
+  function _buildCard(c, pax) {
+    const line=c.cruise_line||'';
+    const dep=PortUtils.parsePort(c.departurePort);
+
+    // Find cheapest cabin key
+    let bestKey=null, bestVal=Infinity;
+    for (const pt of PRICE_TYPES) {
+      const v=parseFloat(c[pt.key]);
+      if (v>0&&v<bestVal){bestVal=v;bestKey=pt.key;}
     }
 
-    if (data.last_scraped || data.last_collected) updateFetchedTimes(data.last_scraped || data.last_collected);
-  } catch(e) {
-    // keep polling silently
+    const priceGrid=PRICE_TYPES.map(pt=>{
+      const cell=_priceCell(c[pt.key],c.currency,pax);
+      if (!cell) return '';
+      const best=pt.key===bestKey;
+      return `<div class="price-item${best?' price-item-best':''}">
+        <div class="price-label">${pt.label}${best?' ★':''}</div>${cell}</div>`;
+    }).filter(Boolean).join('');
+
+    let bestHTML='';
+    const br=parseFloat(c.best_price);
+    if (br) {
+      const u=(c.currency==='EUR'?br*Config.EUR_USD:br)*pax;
+      const e=(c.currency==='USD'?br*Config.USD_EUR:br)*pax;
+      const note=pax>1?` (${pax} pax)`:' (per person)';
+      let mp='';
+      if (State.displayCurrency==='USD')      mp=`<div class="best-price-value">$${Math.round(u).toLocaleString()}</div>`;
+      else if (State.displayCurrency==='EUR') mp=`<div class="best-price-value" style="color:var(--eur)">€${Math.round(e).toLocaleString()}</div>`;
+      else mp=`<div class="best-price-value">$${Math.round(u).toLocaleString()}</div><div class="best-price-eur">€${Math.round(e).toLocaleString()}</div>`;
+      bestHTML=`<div class="best-price-row">
+        <div class="best-price-label">From${note}</div>
+        <div style="text-align:right">${mp}
+          <div style="font-size:10px;color:var(--muted);margin-top:2px;">
+            Listed as ${c.currency==='EUR'?'€':'$'}${Math.round(br).toLocaleString()} ${c.currency}/person</div>
+        </div></div>`;
+    }
+
+    const nights=PriceUtils.extractNights(c.duration_label);
+    return `<div class="cruise-card">
+      <div class="card-header"><span class="line-badge ${line}">${Config.LINE_NAMES[line]||line}</span></div>
+      <div class="card-title">${c.title||'Cruise Voyage'}</div>
+      <div class="card-meta-row">
+        ${c.ship?`<span>🚢 ${c.ship}</span>`:''}
+        ${nights?`<span>🌙 ${nights} nights</span>`:c.duration_label?`<span>🌙 ${c.duration_label}</span>`:''}
+      </div>
+      <div class="card-route">📍 From ${dep?.display||'—'}</div>
+      <div class="card-dates">📅 ${PriceUtils.fmtDate(c.departureDate)} → ${PriceUtils.fmtDate(c.arrivalDate)}</div>
+      <div class="price-section">
+        ${priceGrid?`<div class="price-grid">${priceGrid}</div>`:''}
+        ${bestHTML}
+        ${c.booking_url?`<a href="${c.booking_url}" target="_blank" class="book-btn">Book Now →</a>`:''}
+      </div></div>`;
   }
-}
 
-function resetRefreshBtn() {
-  const btn = document.getElementById('refreshBtn');
-  const icon = document.getElementById('refreshIcon');
-  btn.disabled = false;
-  icon.textContent = '↻';
-}
+  return {setCurrency, render, showEmpty, showDefault};
+})();
 
-function showBanner(type, msg) {
-  const b = document.getElementById('status-banner');
-  b.style.display = 'block';
-  b.className = `${type}`;
-  b.id = 'status-banner';
-  b.textContent = msg;
-}
 
-function showSkeletons() {
-  const grid = document.getElementById('cardsGrid');
-  grid.innerHTML = Array(6).fill(0).map(() => `
-    <div class="skeleton-card">
-      <div class="skel" style="height:16px;width:40%;margin-bottom:12px;"></div>
-      <div class="skel" style="height:20px;width:80%;margin-bottom:8px;"></div>
-      <div class="skel" style="height:14px;width:60%;margin-bottom:20px;"></div>
-      <div class="skel" style="height:80px;width:100%;"></div>
-    </div>`).join('');
-}
-function showEmpty(msg) {
-  document.getElementById('cardsGrid').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><h3>${msg}</h3></div>`;
-}
+/* ============================================================
+   MODULE 7 — FILTERS MODULE
+   apply(), clear(), toggleLine(), setSort(), onPortChange(),
+   and populatePortDropdown() — all filter logic lives here.
+============================================================ */
+const FiltersModule = (() => {
+
+  function populatePortDropdown() {
+    const depMap=new Map();
+    for (const c of State.allCruises) {
+      const dep=PortUtils.parsePort(c.departurePort);
+      if (dep) depMap.set(dep.code,dep.display);
+    }
+    const sorted=[...depMap.entries()].sort((a,b)=>a[1].localeCompare(b[1]));
+    const sel=document.getElementById('filterDep');
+    const cur=sel.value;
+    sel.innerHTML='<option value="">All Boarding Ports</option>';
+    sorted.forEach(([v,l])=>{
+      const o=document.createElement('option');
+      o.value=v; o.textContent=l;
+      if(v===cur) o.selected=true;
+      sel.appendChild(o);
+    });
+  }
+
+  function onPortChange() {
+    _updateLineTogglesForPort(document.getElementById('filterDep').value);
+  }
+
+  function _updateLineTogglesForPort(portCode) {
+    const hint=document.getElementById('portHint');
+    const allBtn=document.querySelector('[data-line="all"]');
+    document.querySelectorAll('.line-toggle[data-line]').forEach(b=>{b.classList.remove('unavailable');b.disabled=false;});
+    if (!portCode){hint.textContent='';return;}
+    const avail=State.portLineMap[portCode.toUpperCase()]||State.portLineMap[portCode]||new Set();
+    if (!avail.size){hint.textContent='';return;}
+    const depEl=document.getElementById('filterDep');
+    hint.textContent=`— available from ${depEl.options[depEl.selectedIndex]?.text||portCode}`;
+    ['norwegian','royal_caribbean','princess'].forEach(line=>{
+      const btn=document.querySelector(`[data-line="${line}"]`);
+      if (!btn) return;
+      if (!avail.has(line)){
+        btn.classList.add('unavailable'); btn.disabled=true;
+        if (State.activeLine===line) toggleLine('all',allBtn);
+      }
+    });
+  }
+
+  function _matchesRegion(c, regionKey) {
+    const kws=Config.REGION_KEYWORDS[regionKey];
+    if (!kws) return true;
+    const hay=[c.title,c.destination,c.itinerary,c.region,c.destinations]
+      .filter(Boolean).join(' ').toLowerCase();
+    return kws.some(kw=>hay.includes(kw));
+  }
+
+  function apply() {
+    State.hasSearched=true;
+    const dep    = document.getElementById('filterDep').value;
+    const nights = document.getElementById('filterNights').value;
+    const month  = document.getElementById('filterMonth').value;
+    const region = document.getElementById('filterRegion').value;
+
+    State.filteredCruises = State.allCruises.filter(c => {
+      const line=(c.cruise_line||'').trim().toLowerCase();
+      if (State.activeLine!=='all'&&line!==State.activeLine) return false;
+      if (dep) {
+        const p=PortUtils.parsePort(c.departurePort);
+        if (!p) return false;
+        if (!(p.code&&p.code.toUpperCase()===dep.toUpperCase())&&
+            !(p.name&&p.name.toLowerCase()===dep.toLowerCase())&&
+            !(p.display&&p.display.toLowerCase().includes(dep.toLowerCase()))) return false;
+      }
+      if (nights&&PriceUtils.extractNights(c.duration_label)!==parseInt(nights)) return false;
+      if (month&&c.departureDate&&String(c.departureDate).slice(0,7)!==month) return false;
+      if (region&&!_matchesRegion(c,region)) return false;
+      return true;
+    });
+
+    const s=State.activeSort;
+    if (s==='price')     State.filteredCruises.sort((a,b)=>(PriceUtils.getPriceInUSD(a)||9999999)-(PriceUtils.getPriceInUSD(b)||9999999));
+    else if (s==='date') State.filteredCruises.sort((a,b)=>String(a.departureDate||'').localeCompare(String(b.departureDate||'')));
+    else                 State.filteredCruises.sort((a,b)=>(PriceUtils.getPriceInUSD(b)||0)-(PriceUtils.getPriceInUSD(a)||0));
+
+    StatsModule.update();
+    CardsModule.render();
+  }
+
+  function toggleLine(line, btn) {
+    if (btn?.classList.contains('unavailable')) return;
+    State.activeLine=line.trim().toLowerCase();
+    document.querySelectorAll('.line-toggle').forEach(b=>b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    if (State.hasSearched) apply();
+  }
+
+  function setSort(sort, btn) {
+    State.activeSort=sort;
+    document.querySelectorAll('.sort-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    if (State.hasSearched) apply();
+  }
+
+  function clear() {
+    ['filterDep','filterNights'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('filterMonth').value='';
+    document.getElementById('filterPax').value='2';
+    document.getElementById('filterRegion').value='';
+    document.querySelectorAll('.line-toggle').forEach(b=>{b.classList.remove('unavailable','active');b.disabled=false;});
+    document.querySelector('[data-line="all"]').classList.add('active');
+    State.activeLine='all'; State.hasSearched=false;
+    document.getElementById('portHint').textContent='';
+    StatsModule.reset();
+    CardsModule.showDefault();
+  }
+
+  return {populatePortDropdown, onPortChange, apply, toggleLine, setSort, clear};
+})();
+
+
+/* ============================================================
+   MODULE 8 — REFRESH MODULE
+   Triggers Apify scrapers, polls for completion, and updates
+   the UI loading state and status banner.
+============================================================ */
+const RefreshModule = (() => {
+  let pollInterval=null;
+
+  function _btn(loading) {
+    const btn=document.getElementById('refreshBtn');
+    const ico=document.getElementById('refreshIcon');
+    btn.disabled=loading;
+    ico.innerHTML=loading?'<span class="spin">↻</span>':'↻';
+  }
+
+  function _banner(type, msg) {
+    const b=document.getElementById('status-banner');
+    b.style.display='block'; b.className=type; b.id='status-banner'; b.textContent=msg;
+  }
+
+  async function trigger() {
+    _btn(true);
+    _banner('running','⏳ Starting data collection — this takes 3–8 minutes. Checking every 30s…');
+    try {
+      await fetch(`${Config.API}/refresh`,{method:'POST'});
+      clearInterval(pollInterval);
+      pollInterval=setInterval(_poll,30000);
+      _poll();
+    } catch(e) { _banner('failed','❌ Could not start refresh: '+e.message); _btn(false); }
+  }
+
+  async function _poll() {
+    try {
+      const d=await fetch(`${Config.API}/refresh-status`).then(r=>r.json());
+      _banner(d.status, d.message||d.status);
+      StatsModule.updateFetchedTimes(d.last_scraped||d.last_collected);
+      if (d.status==='done'||d.status==='partial') {
+        clearInterval(pollInterval); _btn(false); await DataModule.load();
+      } else if (d.status==='failed') {
+        clearInterval(pollInterval); _btn(false);
+      }
+    } catch{}
+  }
+
+  return {trigger};
+})();
+
+
+/* ============================================================
+   MODULE 9 — DATA MODULE
+   Fetches cruise data + stats from Azure API on load and
+   after every successful refresh.
+============================================================ */
+const DataModule = (() => {
+  async function load() {
+    try {
+      const [cr, sr] = await Promise.all([
+        fetch(`${Config.API}/cruises?sort=${State.activeSort}`),
+        fetch(`${Config.API}/stats`)
+      ]);
+      const cd=await cr.json();
+      const sd=await sr.json().catch(()=>null);
+
+      if (cd.status==='success') {
+        State.allCruises=cd.data||[];
+        StatsModule.updateFetchedTimes(cd.last_scraped||cd.last_collected);
+        if (sd?.data) {
+          StatsModule.setTotalCollected(sd.data.reduce((s,x)=>s+(x.total_cruises||0),0));
+        }
+        PortUtils.buildPortLineMap();
+        FiltersModule.populatePortDropdown();
+        // Cards are NOT auto-rendered — user must click Search
+      } else {
+        CardsModule.showEmpty('Could not load cruise data.');
+      }
+    } catch {
+      CardsModule.showEmpty('API unreachable — check Function App status.');
+    }
+  }
+  return {load};
+})();
+
+
+/* ============================================================
+   INIT
+============================================================ */
+window.onload = () => DataModule.load();
 </script>
 </body>
 </html>
