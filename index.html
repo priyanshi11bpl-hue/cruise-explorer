@@ -112,7 +112,7 @@
   .skeleton-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;}
   .skel{background:rgba(255,255,255,0.06);border-radius:4px;animation:shimmer 1.5s infinite;}
   @keyframes shimmer{0%,100%{opacity:0.4}50%{opacity:0.8}}
-  @media(max-width:1100px){.stats-bar{grid-template-columns:repeat(4,1fr);}.stat-item:nth-child(4){border-right:none;}.stat-item:nth-child(5),.stat-item:nth-child(6),.stat-item:nth-child(7),.stat-item:nth-child(8){border-top:1px solid var(--border);}.stat-item:nth-child(8){border-right:none;}}
+  @media(max-width:1100px){.stats-bar{grid-template-columns:repeat(4,1fr);}.stat-item:nth-child(4){border-right:none;}.stat-item:nth-child(5),.stat-item:nth-child(6),.stat-item:nth-child(7),.stat-item:nth-child(8),.stat-item:nth-child(9){border-top:1px solid var(--border);}.stat-item:nth-child(8){border-right:none;}}
   @media(max-width:768px){header,#fetched-bar,.filters-section,.results-header,.cards-grid{padding-left:16px;padding-right:16px;}.cards-grid{grid-template-columns:1fr;}.primary-filters{grid-template-columns:1fr;}}
   @media(max-width:600px){.stats-bar{grid-template-columns:repeat(2,1fr);}.stat-item{border-top:1px solid var(--border);}.stat-item:nth-child(odd){border-right:1px solid var(--border);}.stat-item:nth-child(even){border-right:none;}}
 </style>
@@ -122,7 +122,7 @@
 <header>
   <div class="logo">
     <h1>⚓ Best Price for <span>Cruise</span></h1>
-    <p>Live prices from Norwegian · Royal Caribbean · Princess via Apify + Azure</p>
+    <p>Live prices from Norwegian · Royal Caribbean · Princess · MSC via Apify + Azure</p>
   </div>
   <div class="header-right">
     <div class="live-badge"><span class="live-dot"></span> Azure Live Data</div>
@@ -217,8 +217,8 @@
       <button class="line-toggle active"   data-line="all"             onclick="FiltersModule.toggleLine('all',this)">All Lines</button>
       <button class="line-toggle"          data-line="norwegian"       onclick="FiltersModule.toggleLine('norwegian',this)">🚢 Norwegian</button>
       <button class="line-toggle"          data-line="royal_caribbean" onclick="FiltersModule.toggleLine('royal_caribbean',this)">👑 Royal Caribbean</button>
-      <button class="line-toggle"          data-line="msc"             onclick="FiltersModule.toggleLine('msc',this)">🔱 MSC</button>
       <button class="line-toggle"          data-line="princess"        onclick="FiltersModule.toggleLine('princess',this)">👸 Princess</button>
+      <button class="line-toggle"          data-line="msc"             onclick="FiltersModule.toggleLine('msc',this)">🔱 MSC</button>
     </div>
   </div>
 
@@ -259,7 +259,7 @@
   <div class="stat-item"><div class="stat-label">🚢 Norwegian</div><div class="stat-value" id="statNorwegian">—</div></div>
   <div class="stat-item"><div class="stat-label">👑 Royal Caribbean</div><div class="stat-value" id="statRoyal">—</div></div>
   <div class="stat-item"><div class="stat-label">👸 Princess</div><div class="stat-value" id="statPrincess">—</div></div>
-  <div class="stat-item"><div class="stat-label">🔱 MSC Cruises</div><div class="stat-value" id="statMSC">—</div></div>
+  <div class="stat-item"><div class="stat-label">🔱 MSC</div><div class="stat-value" id="statMSC">—</div></div>
 </div>
 
 <div class="results-header">
@@ -285,20 +285,15 @@
 <script>
 /* ============================================================
    MODULE 1 — CONFIG
-   API endpoint, exchange rates, port name lookup, and all
-   region keyword maps in one place. Edit here to add ports
-   or new destinations without touching any other module.
 ============================================================ */
 const Config = (() => {
   const API     = 'https://cruisebot-func-asgrc7czhnhycdbe.centralindia-01.azurewebsites.net/api';
   const USD_EUR = 0.92;
   const EUR_USD = 1 / USD_EUR;
-
   const LINE_NAMES = {
-    norwegian:'Norwegian', royal_caribbean:'Royal Caribbean', princess:'Princess', msc:'MSC Cruises'
+    norwegian:'Norwegian', royal_caribbean:'Royal Caribbean',
+    princess:'Princess', msc:'MSC Cruises'
   };
-
-  // IATA code → human-readable city name (display labels only, not a filter source)
   const PORT_NAMES = {
     JAX:'Jacksonville',MIA:'Miami',FLL:'Fort Lauderdale',LAX:'Los Angeles',
     SFO:'San Francisco',SEA:'Seattle',SJU:'San Juan',BNE:'Brisbane',
@@ -313,11 +308,6 @@ const Config = (() => {
     ATH:'Athens (Piraeus)',DBV:'Dubrovnik',SPU:'Split',CFU:'Corfu',
     HER:'Heraklion (Crete)',RHO:'Rhodes',MYK:'Mykonos',
   };
-
-  // REGION_KEYWORDS — maps "Where to Go" dropdown value → words to match in cruise data.
-  // FIX: Added greek_islands as its own key. Also added greek/greek isles to mediterranean
-  // so Norwegian and Royal Caribbean results (which use MEDITERRANEAN destination code)
-  // also appear when filtering by Greek Islands.
   const REGION_KEYWORDS = {
     caribbean:         ['caribbean','aruba','barbados','st thomas','st maarten','curacao','curaçao','jamaica','puerto rico','dominican','trinidad','antigua','grenada','martinique'],
     bahamas:           ['bahamas','nassau','grand bahama'],
@@ -328,9 +318,7 @@ const Config = (() => {
     hawaii:            ['hawaii','honolulu','maui','kauai','hilo','oahu','kona'],
     south_america:     ['south america','argentina','brazil','chile','peru','buenos aires','rio','montevideo','valparaiso','ushuaia'],
     panama_canal:      ['panama','canal'],
-    // Mediterranean includes Greek keywords so Norwegian/RC Mediterranean results show up too
     mediterranean:     ['mediterranean','italy','spain','france','greece','greek','greek isles','greek islands','croatia','turkey','rome','barcelona','athens','venice','dubrovnik','santorini','naples','marseille','lisbon','civitavecchia','piraeus','mykonos','rhodes','corfu','crete'],
-    // Greek Islands: dedicated filter — catches Princess "Greek Isles" / "Greece" destination text
     greek_islands:     ['greek','greek isles','greek islands','greece','santorini','mykonos','rhodes','corfu','crete','heraklion','piraeus','athens','zakynthos','lefkada','kefalonia','patmos','kos','lesbos','skiathos'],
     northern_europe:   ['northern europe','north europe','amsterdam','bruges','antwerp','rotterdam'],
     british_isles:     ['british isles','ireland','scotland','england','wales','london','dublin','edinburgh','belfast','liverpool','southampton'],
@@ -345,14 +333,11 @@ const Config = (() => {
     transatlantic:     ['transatlantic','trans-atlantic'],
     world:             ['world cruise','around the world','world voyage'],
   };
-
   return { API, USD_EUR, EUR_USD, LINE_NAMES, PORT_NAMES, REGION_KEYWORDS };
 })();
 
-
 /* ============================================================
    MODULE 2 — STATE
-   Single source of truth. All modules read/write state here.
 ============================================================ */
 const State = (() => {
   let _allCruises=[],_filtered=[],_activeLine='all',_sort='price',
@@ -368,43 +353,35 @@ const State = (() => {
   };
 })();
 
-
 /* ============================================================
    MODULE 3 — PORT UTILS
-   Parses the three different port formats Apify returns and
-   builds the port→cruise-line availability lookup map.
 ============================================================ */
 const PortUtils = (() => {
-
   function parsePort(raw) {
     if (!raw || raw==='None'||raw==='null'||raw==='undefined') return null;
-    let s = String(raw).trim();
+    const s = String(raw).trim();
     if (!s||s==='{}'||s==='[]') return null;
-    // Dict-like: {'name':'Barcelona','code':'BCN'}
     const nm = s.match(/['"]?name['"]?\s*[:=]\s*['"]?([^,'"}\]]+)/i);
     const cm = s.match(/['"]?code['"]?\s*[:=]\s*['"]?([A-Za-z]{2,5})/i);
     if (nm||cm) {
       const rawName = (nm?.[1]||'').trim().replace(/['"{}[\]]/g,'');
       const code    = (cm?.[1]||'').trim().toUpperCase();
       const short   = rawName ? rawName.split(',')[0].trim() : (Config.PORT_NAMES[code]||code);
-      const display = short&&code&&short!==code ? ${short} (${code}) : short||code;
+      const display = short&&code&&short!==code ? `${short} (${code})` : short||code;
       return {display, code:code||short, name:short};
     }
-    // Plain IATA code
     if (/^[A-Z]{2,5}$/.test(s)) {
       const name = Config.PORT_NAMES[s]||s;
-      return {display: Config.PORT_NAMES[s]?${name} (${s}):s, code:s, name};
+      return {display: Config.PORT_NAMES[s] ? `${name} (${s})` : s, code:s, name};
     }
-    // Plain city string
     const short = s.split(',')[0].trim().replace(/['"{}[\]]/g,'');
     if (!short) return null;
     const entry = Object.entries(Config.PORT_NAMES).find(
       ([,v])=>v.toLowerCase()===short.toLowerCase()||v.toLowerCase().startsWith(short.toLowerCase())
     );
-    if (entry) return {display:${entry[1]} (${entry[0]}), code:entry[0], name:entry[1]};
+    if (entry) return {display:`${entry[1]} (${entry[0]})`, code:entry[0], name:entry[1]};
     return {display:short, code:short, name:short};
   }
-
   function buildPortLineMap() {
     const map = {};
     for (const c of State.allCruises) {
@@ -412,22 +389,18 @@ const PortUtils = (() => {
       if (!dep?.code) continue;
       const line = (c.cruise_line||'').trim().toLowerCase();
       if (!line) continue;
-      [dep.code.toUpperCase(), dep.name].filter(Boolean).forEach(k=>{
+      [dep.code.toUpperCase(), dep.name].filter(Boolean).forEach(k => {
         if (!map[k]) map[k]=new Set();
         map[k].add(line);
       });
     }
     State.portLineMap = map;
   }
-
   return {parsePort, buildPortLineMap};
 })();
 
-
 /* ============================================================
    MODULE 4 — PRICE UTILS
-   Currency conversion and small formatting helpers shared
-   by both the filters and the card renderer.
 ============================================================ */
 const PriceUtils = (() => {
   const getPriceInUSD = c => {
@@ -447,14 +420,11 @@ const PriceUtils = (() => {
   return {getPriceInUSD, extractNights, fmtDate};
 })();
 
-
 /* ============================================================
    MODULE 5 — STATS MODULE
-   Updates the 8-cell stats bar and the results count label.
 ============================================================ */
 const StatsModule = (() => {
   const $ = id => document.getElementById(id);
-
   function update() {
     const cs = State.filteredCruises;
     const px = cs.map(c=>PriceUtils.getPriceInUSD(c)).filter(Boolean);
@@ -468,35 +438,28 @@ const StatsModule = (() => {
     $('statMSC').textContent       = cs.filter(c=>c.cruise_line==='msc').length;
     $('resultCount').textContent   = cs.length;
   }
-
   function reset() {
     ['statTotal','statMin','statMax','statAvg','statNorwegian','statRoyal','statPrincess','statMSC']
       .forEach(id => $(id).textContent='—');
     $('resultCount').textContent='0';
   }
-
   function setTotalCollected(n) { $('statFetched').textContent=n; }
-
   function updateFetchedTimes(lc) {
     if (!lc) return;
     for (const [line,ts] of Object.entries(lc)) {
-      const el=$(fetched-${line});
+      const el=document.getElementById(`fetched-${line}`);
       if (!el||!ts) continue;
       try {
-        const dt=new Date(${ts.slice(0,4)}-${ts.slice(4,6)}-${ts.slice(6,8)}T${ts.slice(9,11)}:${ts.slice(11,13)}:00Z);
+        const dt=new Date(`${ts.slice(0,4)}-${ts.slice(4,6)}-${ts.slice(6,8)}T${ts.slice(9,11)}:${ts.slice(11,13)}:00Z`);
         el.textContent=isNaN(dt)?ts:dt.toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
       } catch{el.textContent=ts;}
     }
   }
-
   return {update, reset, setTotalCollected, updateFetchedTimes};
 })();
 
-
 /* ============================================================
    MODULE 6 — CARDS MODULE
-   Renders cruise cards and handles the currency toggle.
-   All card HTML is built here in _buildCard().
 ============================================================ */
 const CardsModule = (() => {
   const PRICE_TYPES = [
@@ -506,7 +469,6 @@ const CardsModule = (() => {
     {key:'minisuite_price', label:'Mini Suite'},
     {key:'suite_price',     label:'Suite'},
   ];
-
   function setCurrency(cur) {
     State.displayCurrency=cur;
     ['USD','EUR','BOTH'].forEach(c=>
@@ -514,7 +476,6 @@ const CardsModule = (() => {
     );
     if (State.hasSearched) render();
   }
-
   function render() {
     const grid=document.getElementById('cardsGrid');
     if (!State.hasSearched) return;
@@ -525,44 +486,35 @@ const CardsModule = (() => {
     const pax=parseInt(document.getElementById('filterPax').value)||1;
     grid.innerHTML=State.filteredCruises.map(c=>_buildCard(c,pax)).join('');
   }
-
   function showEmpty(msg) {
-    document.getElementById('cardsGrid').innerHTML=<div class="empty-state"><div class="icon">⚠️</div><h3>${msg}</h3></div>;
+    document.getElementById('cardsGrid').innerHTML=`<div class="empty-state"><div class="icon">⚠️</div><h3>${msg}</h3></div>`;
   }
-
   function showDefault() {
-    document.getElementById('cardsGrid').innerHTML=<div class="empty-state"><div class="icon">⚓</div><h3>Set your filters and click "Search" to find cruises</h3><p>Or click "Refresh Prices" to load the latest data first</p></div>;
+    document.getElementById('cardsGrid').innerHTML=`<div class="empty-state"><div class="icon">⚓</div><h3>Set your filters and click "Search" to find cruises</h3><p>Or click "Refresh Prices" to load the latest data first</p></div>`;
   }
-
   function _priceCell(raw, fromCurrency, numPax) {
     const p=parseFloat(raw); if(!p) return '';
     const usd=(fromCurrency==='EUR'?p*Config.EUR_USD:p)*numPax;
     const eur=(fromCurrency==='USD'?p*Config.USD_EUR:p)*numPax;
     const pl=numPax>1?` <span style="font-size:10px;color:var(--muted)">for ${numPax}</span>`:'';
-    if (State.displayCurrency==='USD')  return <div class="price-usd">$${Math.round(usd).toLocaleString()}${pl}</div>;
-    if (State.displayCurrency==='EUR')  return <div class="price-usd" style="color:var(--eur)">€${Math.round(eur).toLocaleString()}${pl}</div>;
-    return <div class="price-usd">$${Math.round(usd).toLocaleString()}${pl}</div><div class="price-eur">€${Math.round(eur).toLocaleString()}</div>;
+    if (State.displayCurrency==='USD')  return `<div class="price-usd">$${Math.round(usd).toLocaleString()}${pl}</div>`;
+    if (State.displayCurrency==='EUR')  return `<div class="price-usd" style="color:var(--eur)">€${Math.round(eur).toLocaleString()}${pl}</div>`;
+    return `<div class="price-usd">$${Math.round(usd).toLocaleString()}${pl}</div><div class="price-eur">€${Math.round(eur).toLocaleString()}</div>`;
   }
-
   function _buildCard(c, pax) {
     const line=c.cruise_line||'';
     const dep=PortUtils.parsePort(c.departurePort);
-
-    // Find cheapest cabin key
     let bestKey=null, bestVal=Infinity;
     for (const pt of PRICE_TYPES) {
       const v=parseFloat(c[pt.key]);
       if (v>0&&v<bestVal){bestVal=v;bestKey=pt.key;}
     }
-
     const priceGrid=PRICE_TYPES.map(pt=>{
       const cell=_priceCell(c[pt.key],c.currency,pax);
       if (!cell) return '';
       const best=pt.key===bestKey;
-      return `<div class="price-item${best?' price-item-best':''}">
-        <div class="price-label">${pt.label}${best?' ★':''}</div>${cell}</div>`;
+      return `<div class="price-item${best?' price-item-best':''}"><div class="price-label">${pt.label}${best?' ★':''}</div>${cell}</div>`;
     }).filter(Boolean).join('');
-
     let bestHTML='';
     const br=parseFloat(c.best_price);
     if (br) {
@@ -570,45 +522,34 @@ const CardsModule = (() => {
       const e=(c.currency==='USD'?br*Config.USD_EUR:br)*pax;
       const note=pax>1?` (${pax} pax)`:' (per person)';
       let mp='';
-      if (State.displayCurrency==='USD')      mp=<div class="best-price-value">$${Math.round(u).toLocaleString()}</div>;
-      else if (State.displayCurrency==='EUR') mp=<div class="best-price-value" style="color:var(--eur)">€${Math.round(e).toLocaleString()}</div>;
-      else mp=<div class="best-price-value">$${Math.round(u).toLocaleString()}</div><div class="best-price-eur">€${Math.round(e).toLocaleString()}</div>;
-      bestHTML=`<div class="best-price-row">
-        <div class="best-price-label">From${note}</div>
-        <div style="text-align:right">${mp}
-          <div style="font-size:10px;color:var(--muted);margin-top:2px;">
-            Listed as ${c.currency==='EUR'?'€':'$'}${Math.round(br).toLocaleString()} ${c.currency}/person</div>
-        </div></div>`;
+      if (State.displayCurrency==='USD')      mp=`<div class="best-price-value">$${Math.round(u).toLocaleString()}</div>`;
+      else if (State.displayCurrency==='EUR') mp=`<div class="best-price-value" style="color:var(--eur)">€${Math.round(e).toLocaleString()}</div>`;
+      else mp=`<div class="best-price-value">$${Math.round(u).toLocaleString()}</div><div class="best-price-eur">€${Math.round(e).toLocaleString()}</div>`;
+      bestHTML=`<div class="best-price-row"><div class="best-price-label">From${note}</div><div style="text-align:right">${mp}<div style="font-size:10px;color:var(--muted);margin-top:2px;">Listed as ${c.currency==='EUR'?'€':'$'}${Math.round(br).toLocaleString()} ${c.currency}/person</div></div></div>`;
     }
-
     const nights=PriceUtils.extractNights(c.duration_label);
     return `<div class="cruise-card">
       <div class="card-header"><span class="line-badge ${line}">${Config.LINE_NAMES[line]||line}</span></div>
       <div class="card-title">${c.title||'Cruise Voyage'}</div>
       <div class="card-meta-row">
-        ${c.ship?<span>🚢 ${c.ship}</span>:''}
-        ${nights?<span>🌙 ${nights} nights</span>:c.duration_label?<span>🌙 ${c.duration_label}</span>:''}
+        ${c.ship?`<span>🚢 ${c.ship}</span>`:''}
+        ${nights?`<span>🌙 ${nights} nights</span>`:c.duration_label?`<span>🌙 ${c.duration_label}</span>`:''}
       </div>
       <div class="card-route">📍 From ${dep?.display||'—'}</div>
       <div class="card-dates">📅 ${PriceUtils.fmtDate(c.departureDate)} → ${PriceUtils.fmtDate(c.arrivalDate)}</div>
       <div class="price-section">
-        ${priceGrid?<div class="price-grid">${priceGrid}</div>:''}
+        ${priceGrid?`<div class="price-grid">${priceGrid}</div>`:''}
         ${bestHTML}
-        ${c.booking_url?<a href="${c.booking_url}" target="_blank" class="book-btn">Book Now →</a>:''}
+        ${c.booking_url?`<a href="${c.booking_url}" target="_blank" class="book-btn">Book Now →</a>`:''}
       </div></div>`;
   }
-
   return {setCurrency, render, showEmpty, showDefault};
 })();
 
-
 /* ============================================================
    MODULE 7 — FILTERS MODULE
-   apply(), clear(), toggleLine(), setSort(), onPortChange(),
-   and populatePortDropdown() — all filter logic lives here.
 ============================================================ */
 const FiltersModule = (() => {
-
   function populatePortDropdown() {
     const depMap=new Map();
     for (const c of State.allCruises) {
@@ -626,11 +567,9 @@ const FiltersModule = (() => {
       sel.appendChild(o);
     });
   }
-
   function onPortChange() {
     _updateLineTogglesForPort(document.getElementById('filterDep').value);
   }
-
   function _updateLineTogglesForPort(portCode) {
     const hint=document.getElementById('portHint');
     const allBtn=document.querySelector('[data-line="all"]');
@@ -639,9 +578,9 @@ const FiltersModule = (() => {
     const avail=State.portLineMap[portCode.toUpperCase()]||State.portLineMap[portCode]||new Set();
     if (!avail.size){hint.textContent='';return;}
     const depEl=document.getElementById('filterDep');
-    hint.textContent=— available from ${depEl.options[depEl.selectedIndex]?.text||portCode};
-    ['norwegian','royal_caribbean','princess'].forEach(line=>{
-      const btn=document.querySelector([data-line="${line}"]);
+    hint.textContent=`— available from ${depEl.options[depEl.selectedIndex]?.text||portCode}`;
+    ['norwegian','royal_caribbean','princess','msc'].forEach(line=>{
+      const btn=document.querySelector(`[data-line="${line}"]`);
       if (!btn) return;
       if (!avail.has(line)){
         btn.classList.add('unavailable'); btn.disabled=true;
@@ -649,7 +588,6 @@ const FiltersModule = (() => {
       }
     });
   }
-
   function _matchesRegion(c, regionKey) {
     const kws=Config.REGION_KEYWORDS[regionKey];
     if (!kws) return true;
@@ -657,14 +595,12 @@ const FiltersModule = (() => {
       .filter(Boolean).join(' ').toLowerCase();
     return kws.some(kw=>hay.includes(kw));
   }
-
   function apply() {
     State.hasSearched=true;
     const dep    = document.getElementById('filterDep').value;
     const nights = document.getElementById('filterNights').value;
     const month  = document.getElementById('filterMonth').value;
     const region = document.getElementById('filterRegion').value;
-
     State.filteredCruises = State.allCruises.filter(c => {
       const line=(c.cruise_line||'').trim().toLowerCase();
       if (State.activeLine!=='all'&&line!==State.activeLine) return false;
@@ -680,16 +616,13 @@ const FiltersModule = (() => {
       if (region&&!_matchesRegion(c,region)) return false;
       return true;
     });
-
     const s=State.activeSort;
     if (s==='price')     State.filteredCruises.sort((a,b)=>(PriceUtils.getPriceInUSD(a)||9999999)-(PriceUtils.getPriceInUSD(b)||9999999));
     else if (s==='date') State.filteredCruises.sort((a,b)=>String(a.departureDate||'').localeCompare(String(b.departureDate||'')));
     else                 State.filteredCruises.sort((a,b)=>(PriceUtils.getPriceInUSD(b)||0)-(PriceUtils.getPriceInUSD(a)||0));
-
     StatsModule.update();
     CardsModule.render();
   }
-
   function toggleLine(line, btn) {
     if (btn?.classList.contains('unavailable')) return;
     State.activeLine=line.trim().toLowerCase();
@@ -697,14 +630,12 @@ const FiltersModule = (() => {
     if (btn) btn.classList.add('active');
     if (State.hasSearched) apply();
   }
-
   function setSort(sort, btn) {
     State.activeSort=sort;
     document.querySelectorAll('.sort-tab').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     if (State.hasSearched) apply();
   }
-
   function clear() {
     ['filterDep','filterNights'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('filterMonth').value='';
@@ -717,45 +648,40 @@ const FiltersModule = (() => {
     StatsModule.reset();
     CardsModule.showDefault();
   }
-
   return {populatePortDropdown, onPortChange, apply, toggleLine, setSort, clear};
 })();
 
-
 /* ============================================================
    MODULE 8 — REFRESH MODULE
-   Triggers Apify scrapers, polls for completion, and updates
-   the UI loading state and status banner.
 ============================================================ */
 const RefreshModule = (() => {
   let pollInterval=null;
-
   function _btn(loading) {
     const btn=document.getElementById('refreshBtn');
     const ico=document.getElementById('refreshIcon');
     btn.disabled=loading;
     ico.innerHTML=loading?'<span class="spin">↻</span>':'↻';
   }
-
   function _banner(type, msg) {
     const b=document.getElementById('status-banner');
     b.style.display='block'; b.className=type; b.id='status-banner'; b.textContent=msg;
   }
-
   async function trigger() {
     _btn(true);
     _banner('running','⏳ Starting data collection — this takes 3–8 minutes. Checking every 30s…');
     try {
-      await fetch(${Config.API}/refresh,{method:'POST'});
+      await fetch(`${Config.API}/refresh`, {method:'POST'});
       clearInterval(pollInterval);
-      pollInterval=setInterval(_poll,30000);
+      pollInterval=setInterval(_poll, 30000);
       _poll();
-    } catch(e) { _banner('failed','❌ Could not start refresh: '+e.message); _btn(false); }
+    } catch(e) {
+      _banner('failed','❌ Could not start refresh: '+e.message);
+      _btn(false);
+    }
   }
-
   async function _poll() {
     try {
-      const d=await fetch(${Config.API}/refresh-status).then(r=>r.json());
+      const d=await fetch(`${Config.API}/refresh-status`).then(r=>r.json());
       _banner(d.status, d.message||d.status);
       StatsModule.updateFetchedTimes(d.last_scraped||d.last_collected);
       if (d.status==='done'||d.status==='partial') {
@@ -765,26 +691,21 @@ const RefreshModule = (() => {
       }
     } catch{}
   }
-
   return {trigger};
 })();
 
-
 /* ============================================================
    MODULE 9 — DATA MODULE
-   Fetches cruise data + stats from Azure API on load and
-   after every successful refresh.
 ============================================================ */
 const DataModule = (() => {
   async function load() {
     try {
       const [cr, sr] = await Promise.all([
-        fetch(${Config.API}/cruises?sort=${State.activeSort}),
-        fetch(${Config.API}/stats)
+        fetch(`${Config.API}/cruises?sort=${State.activeSort}`),
+        fetch(`${Config.API}/stats`)
       ]);
       const cd=await cr.json();
       const sd=await sr.json().catch(()=>null);
-
       if (cd.status==='success') {
         State.allCruises=cd.data||[];
         StatsModule.updateFetchedTimes(cd.last_scraped||cd.last_collected);
@@ -793,7 +714,6 @@ const DataModule = (() => {
         }
         PortUtils.buildPortLineMap();
         FiltersModule.populatePortDropdown();
-        // Cards are NOT auto-rendered — user must click Search
       } else {
         CardsModule.showEmpty('Could not load cruise data.');
       }
@@ -803,7 +723,6 @@ const DataModule = (() => {
   }
   return {load};
 })();
-
 
 /* ============================================================
    INIT
